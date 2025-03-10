@@ -27,8 +27,7 @@
           class="movie-image"
           @click="verDetalles(movieOfTheDay.id)"
         />
-        <p>{{ movieOfTheDay.description }}</p>
-      </section>
+            </section>
 
       <!-- Horario Semanal -->
       <section class="weekly-movies" v-if="weeklyMovies.length">
@@ -91,7 +90,7 @@ onMounted(async () => {
       movieOfTheDay.value = {
         title: data.movieOfTheDay.titulo || "Título no disponible",
         poster_url: data.movieOfTheDay.url_poster || "https://via.placeholder.com/300",
-        description: data.movieOfTheDay.descripcion || "Sin descripción",
+        // description: data.movieOfTheDay.descripcion || "Sin descripción",
         id: data.movieOfTheDay.id // Asegúrate de que el ID esté presente
       };
     } else {
