@@ -2,7 +2,7 @@
   <div class="container">
     <!-- Barra de Navegación -->
     <nav class="navbar">
-      <button class="nav-button">Inicio/logo</button>
+      <button class="nav-button">Home</button>
       <input
         type="text"
         v-model="buscarPeli"
@@ -12,7 +12,12 @@
       <button class="nav-calendar" @click="irCalendario">Sesión semanal</button>
       <button class="nav-button">Sesión del día</button>
       <button class="nav-button">🛒</button>
-      <button class="nav-button">Ícono login</button>
+      <!-- Botón de perfil o ícono de login según si está logueado -->
+      <div v-if="isLogged" class="profile-photo" @click="irPerfil">
+        <img class="loginIcon" :src="profilePhoto" alt="Foto de perfil" />
+      </div>
+      <button v-else class="nav-button" @click="irLogin">Login</button>
+
     </nav>
 
     <!-- Contenido Principal -->
@@ -61,6 +66,9 @@ import axios from 'axios'
 
 const router = useRouter()
 const buscarPeli = ref('')
+const isLogged = ref(false)
+const profilePhoto = ref('https://static.vecteezy.com/system/resources/thumbnails/019/879/186/small/user-icon-on-transparent-background-free-png.png');
+
 
 // Variables reactivas para almacenar la película del día y las películas semanales
 const movieOfTheDay = ref(null)
@@ -75,6 +83,30 @@ const irCalendario = () => {
 const verDetalles = (movieId) => {
   router.push(`/movie/${movieId}`)
 }
+// ir al perfil
+const irPerfil = () => {
+  router.push('/perfil')
+}
+
+
+// Función para navegar a la página de login o al perfil si esta logeado
+const irLogin = () => {
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    router.push('/perfil')
+  } else {
+    router.push('/login')
+  }
+}
+
+
+
+onMounted(() => {
+  const token = localStorage.getItem('auth_token')
+  isLogged.value = !!token
+})
+
+
 
 // Al montar el componente, realizamos la petición al endpoint de películas
 onMounted(async () => {
@@ -132,7 +164,7 @@ onMounted(async () => {
 /* Barra de navegación */
 .navbar {
   background-color: gray; /* Gris oscuro */
-  padding: 25px;
+  padding: 20px;
   display: flex;
   justify-content: space-around;
   color: black;
@@ -149,6 +181,10 @@ onMounted(async () => {
   padding: 8px;
 }
 
+.loginIcon{
+  width: 50px;
+  height: 40px;
+}
 /* Contenido principal */
 .content {
   flex-grow: 1;

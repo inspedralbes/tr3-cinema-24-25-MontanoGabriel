@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class SessionMovie extends Model
 {
     use HasFactory;
-
+    protected $table = 'SessionMovies';
     protected $fillable = ['movie_id', 'date', 'time', 'seats'];
 
     public function movie()

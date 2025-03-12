@@ -26,9 +26,13 @@
       </div>
     </div>
 
-    <!-- Botón de comprar -->
-    <div class="buy-button-container">
-      <button class="buy-button">Comprar Entrada</button>
+    <!-- Horarios disponibles -->
+    <div class="schedule-container">
+      <h3>Horarios disponibles:</h3>
+      <div class="schedule-buttons">
+        <button class="schedule-button" @click="comprarEntrada('16:00')">16:00</button>
+        <button class="schedule-button" @click="comprarEntrada('18:00')">18:00</button>
+      </div>
     </div>
 
     <!-- Footer -->
@@ -51,14 +55,12 @@ const movieId = route.params.id
 
 onMounted(async () => {
   try {
-
     // Construir la URL de la API para obtener los detalles de la película
     const apiUrl = `http://localhost:8000/api/movie/${movieId}`
-    
 
     // Usar fetch para hacer la petición
     const response = await fetch(apiUrl)
-    
+
     if (!response.ok) {
       throw new Error(`Error al obtener los detalles de la película: ${response.status}`)
     }
@@ -80,10 +82,15 @@ onMounted(async () => {
 const goBack = () => {
   router.go(-1) // Regresa a la página anterior
 }
+
+// Función para redirigir a la compra de entradas con el horario seleccionado
+const comprarEntrada = (hora) => {
+  router.push(`/compra/${movieId}?hora=${hora}`)
+}
 </script>
 
 <style scoped>
-/* Estilos como los que ya tienes */
+/* Estilos del contenedor principal */
 .container {
   display: flex;
   flex-direction: column;
@@ -91,6 +98,7 @@ const goBack = () => {
   background-color: #e5e7eb;
 }
 
+/* Navbar */
 .navbar {
   background-color: gray;
   padding: 20px;
@@ -107,6 +115,7 @@ const goBack = () => {
   cursor: pointer;
 }
 
+/* Estilos de los detalles de la película */
 .movie-details {
   display: flex;
   justify-content: space-between;
@@ -144,13 +153,20 @@ const goBack = () => {
   font-weight: bold;
 }
 
-.buy-button-container {
-  display: flex;
-  justify-content: center;
+/* Contenedor de los horarios */
+.schedule-container {
+  text-align: center;
   margin-top: 20px;
 }
 
-.buy-button {
+.schedule-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 10px;
+}
+
+.schedule-button {
   background-color: red;
   color: white;
   padding: 10px 20px;
@@ -161,10 +177,11 @@ const goBack = () => {
   transition: 0.3s;
 }
 
-.buy-button:hover {
+.schedule-button:hover {
   background-color: darkred;
 }
 
+/* Footer */
 .footer {
   background-color: #a1a1a1;
   padding: 15px;
