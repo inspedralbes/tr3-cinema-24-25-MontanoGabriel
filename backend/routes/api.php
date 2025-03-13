@@ -6,6 +6,7 @@ use App\Http\Controllers\MovieController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SessionMovieController;
 
 // Rutas de autenticación
 Route::post('/register', [AuthController::class, 'register']);
@@ -20,7 +21,8 @@ Route::get('/movies', [MovieController::class, 'index']);
 Route::get('/movie/{id}', [MovieController::class, 'show']);
 
 // Sesiones
-Route::get('/SessionMovies/{movieId}', [SessionController::class, 'getSessionsForMovie']);
+Route::get('/session-movies', [SessionMovieController::class, 'index']); // Para las sesiones del día y semanales
+Route::get('/session-movies/{id}', [SessionMovieController::class, 'show']); // Para una sesión específica
 
 // Compra de Entradas
 Route::post('/compra', [TicketController::class, 'comprarEntrada']);

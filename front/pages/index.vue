@@ -10,14 +10,13 @@
         class="search-bar"
       />
       <button class="nav-calendar" @click="irCalendario">Sesión semanal</button>
-      <button class="nav-button">Sesión del día</button>
+      <button class="nav-button"@click="irPeliculas">Todas las peliculas</button>
       <button class="nav-button">🛒</button>
       <!-- Botón de perfil o ícono de login según si está logueado -->
       <div v-if="isLogged" class="profile-photo" @click="irPerfil">
         <img class="loginIcon" :src="profilePhoto" alt="Foto de perfil" />
       </div>
       <button v-else class="nav-button" @click="irLogin">Login</button>
-
     </nav>
 
     <!-- Contenido Principal -->
@@ -32,21 +31,20 @@
           class="movie-image"
           @click="verDetalles(movieOfTheDay.id)"
         />
-            </section>
+      </section>
 
       <!-- Horario Semanal -->
       <section class="weekly-movies" v-if="weeklyMovies.length">
         <h2>Horario Semanal de sesiones/películas</h2>
         <div class="movies-list">
           <div v-for="(movie, index) in weeklyMovies" :key="index" class="weekly-movie">
-            <h3>Día {{ index + 1 }}: {{ movie.title }}</h3>
+            <h3>{{ diasSemana[index] }}: {{ movie.title }}</h3>
             <img
               :src="movie.poster_url"
               :alt="movie.title"
               class="movie-image"
               @click="verDetalles(movie.id)"
             />
-            
           </div>
         </div>
       </section>
@@ -68,6 +66,7 @@ const router = useRouter()
 const buscarPeli = ref('')
 const isLogged = ref(false)
 const profilePhoto = ref('https://static.vecteezy.com/system/resources/thumbnails/019/879/186/small/user-icon-on-transparent-background-free-png.png');
+const diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo'];
 
 
 // Variables reactivas para almacenar la película del día y las películas semanales
@@ -78,16 +77,21 @@ const weeklyMovies = ref([])
 const irCalendario = () => {
   router.push('/Calendar')
 }
+// Ir a todas las peliculas
+const irPeliculas = () => {
+  router.push('/peliculas')
+}
+
 
 // Función para navegar a los detalles de la película
 const verDetalles = (movieId) => {
   router.push(`/movie/${movieId}`)
 }
+
 // ir al perfil
 const irPerfil = () => {
   router.push('/perfil')
 }
-
 
 // Función para navegar a la página de login o al perfil si esta logeado
 const irLogin = () => {
@@ -99,19 +103,15 @@ const irLogin = () => {
   }
 }
 
-
-
 onMounted(() => {
   const token = localStorage.getItem('auth_token')
   isLogged.value = !!token
 })
 
-
-
 // Al montar el componente, realizamos la petición al endpoint de películas
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/movies');
+    const response = await fetch('http://localhost:8000/api/session-movies');
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -122,8 +122,7 @@ onMounted(async () => {
       movieOfTheDay.value = {
         title: data.movieOfTheDay.titulo || "Título no disponible",
         poster_url: data.movieOfTheDay.url_poster || "https://via.placeholder.com/300",
-        // description: data.movieOfTheDay.descripcion || "Sin descripción",
-        id: data.movieOfTheDay.id // Asegúrate de que el ID esté presente
+        id: data.movieOfTheDay.id
       };
     } else {
       console.warn("⚠️ No hay película del día disponible");
@@ -136,7 +135,7 @@ onMounted(async () => {
         title: movie.titulo || "Título no disponible",
         poster_url: movie.url_poster || "https://via.placeholder.com/200",
         description: movie.descripcion || "Sin descripción",
-        id: movie.id // Asegúrate de que el ID esté presente
+        id: movie.id
       }));
     } else {
       console.warn("⚠️ No hay películas semanales disponibles");
@@ -149,42 +148,56 @@ onMounted(async () => {
 });
 </script>
 
-
-
-
 <style scoped>
 /* Contenedor principal */
 .container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #e5e7eb; /* Color gris claro */
+  background-color: #ffffff; /* Fondo blanco */
+  color: #000000; /* Texto negro */
+  font-family: 'Arial', sans-serif;
 }
 
 /* Barra de navegación */
 .navbar {
-  background-color: gray; /* Gris oscuro */
-  padding: 20px;
+  background-color: #0d47a1; /* Azul oscuro */
+  padding: 15px;
   display: flex;
   justify-content: space-around;
-  color: black;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .nav-button, .nav-calendar {
-  background-color: gainsboro;
+  background-color: #1976d2; /* Azul claro */
   border: none;
-  padding: 8px 12px;
+  padding: 10px 15px;
   cursor: pointer;
+  color: white;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.nav-button:hover, .nav-calendar:hover {
+  background-color: #2196f3; /* Azul brillante al hacer hover */
 }
 
 .search-bar {
   padding: 8px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  background-color: #ffffff;
+  color: #000000;
 }
 
-.loginIcon{
-  width: 50px;
+.loginIcon {
+  width: 40px;
   height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
 }
+
 /* Contenido principal */
 .content {
   flex-grow: 1;
@@ -192,76 +205,61 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  padding: 10px;
+  padding: 20px;
 }
 
-.movie-of-the-day img{
+.movie-of-the-day img {
   max-width: 100%;
   height: 400px;
   border-radius: 8px;
   box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-}
-.weekly-movie img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
 }
 
+.movie-of-the-day img:hover {
+  transform: scale(1.05);
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3);
+}
+
+.weekly-movies {
+  margin-top: 20px;
+}
 
 .movies-list {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 20px;
 }
 
 .weekly-movie {
   border: 1px solid #ccc;
-  padding: 10px;
+  padding: 15px;
   width: 200px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.weekly-movie:hover {
+  transform: translateY(-5px);
+  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.2);
 }
 
 .weekly-movie img {
   width: 100%;
+  border-radius: 8px;
 }
 
 /* Footer */
 .footer {
-  background-color: #a1a1a1;
+  background-color: #0d47a1; /* Azul oscuro */
   padding: 15px;
   text-align: center;
-  color: black;
+  color: white;
   font-weight: bold;
-}
-
-/* Efecto hover para las imágenes */
-.movie-image {
-  max-width: 100%;
-  height: 400px;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-}
-
-.movie-image:hover {
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño de la imagen */
-  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3); /* Aumenta la sombra */
-}
-
-/* Semanas */
-.weekly-movie img {
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-  cursor: pointer;
-}
-
-.weekly-movie img:hover {
-  transform: scale(1.05); /* Aumenta ligeramente el tamaño de la imagen */
-  box-shadow: 0px 8px 12px rgba(0, 0, 0, 0.3); /* Aumenta la sombra */
+  margin-top: auto;
 }
 </style>

@@ -32,6 +32,7 @@
       <div class="schedule-buttons">
         <button class="schedule-button" @click="comprarEntrada('16:00')">16:00</button>
         <button class="schedule-button" @click="comprarEntrada('18:00')">18:00</button>
+        <button class="schedule-button" @click="comprarEntrada('20:00')">20:00</button>
       </div>
     </div>
 

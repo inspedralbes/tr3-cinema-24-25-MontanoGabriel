@@ -13,8 +13,6 @@ return new class extends Migration {
             $table->text('descripcion')->nullable();
             $table->integer('duracion'); 
             $table->string('url_poster')->nullable(); 
-            $table->boolean('es_pelicula_del_dia')->default(false); 
-            $table->boolean('es_pelicula_semanal')->default(false);
             $table->timestamps();
         });
     }

@@ -17,11 +17,20 @@
   
       <!-- Contenido principal -->
       <div class="content">
-        <h1 class="title">Películas Semanales</h1>
+        <h1 class="title">Todas las Películas</h1>
   
         <div v-if="movies.length" class="movies-list">
-          <div v-for="movie in movies" :key="movie.id" class="movie-card" @click="goToSessions(movie.id)">
-            <img :src="movie.poster_url" :alt="movie.title" class="movie-poster" />
+          <div
+            v-for="movie in filteredMovies"
+            :key="movie.id"
+            class="movie-card"
+            @click="goToSessions(movie.id)"
+          >
+            <img
+              :src="movie.poster_url"
+              :alt="movie.title"
+              class="movie-poster"
+            />
             <h3>{{ movie.title }}</h3>
           </div>
         </div>
@@ -37,42 +46,47 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, computed } from 'vue'
   import { useRouter } from 'vue-router'
   
   const movies = ref([])
   const buscarPeli = ref('')
   const router = useRouter()
-
+  
   // Función para redirigir a la página de detalles de la película
   const goToSessions = (movieId) => {
-  router.push(`/movie/${movieId}`)
-}
+    router.push(`/movie/${movieId}`)
+  }
+  
+  // Computed property para filtrar películas según la búsqueda
+  const filteredMovies = computed(() => {
+    return movies.value.filter(movie =>
+      movie.title.toLowerCase().includes(buscarPeli.value.toLowerCase())
+    )
+  })
   
   onMounted(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/session-movies')
+      const response = await fetch('http://localhost:8000/api/movies')
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`)
       }
       const data = await response.json()
   
-      if (Array.isArray(data.weeklyMovies)) {
-        movies.value = data.weeklyMovies.map(movie => ({
+      if (Array.isArray(data)) {
+        movies.value = data.map(movie => ({
           id: movie.id,
           title: movie.titulo || "Título no disponible",
           poster_url: movie.url_poster || "https://via.placeholder.com/200x300?text=No+Image",
         }))
       } else {
-        console.warn("⚠️ No hay películas semanales disponibles")
+        console.warn("⚠️ No hay películas disponibles")
         movies.value = []
       }
     } catch (error) {
       console.error('Error cargando las películas:', error)
     }
   })
-  
-  
   </script>
   
   <style scoped>

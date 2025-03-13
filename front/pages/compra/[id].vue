@@ -28,11 +28,6 @@
   
       <!-- Selección de Horario (por ejemplo, 16:00 y 18:00) -->
       <div class="schedule-container">
-        <h3>Horarios disponibles:</h3>
-        <div class="schedule-buttons">
-          <button class="schedule-button" @click="setHour('16:00')">16:00</button>
-          <button class="schedule-button" @click="setHour('18:00')">18:00</button>
-        </div>
         <p class="selected-hour" v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
       </div>
   
@@ -96,6 +91,7 @@
   
   const route = useRoute()
   const router = useRouter()
+  
   
   // Datos de la película
   const movie = ref(null)
@@ -183,6 +179,7 @@
   
   // Función para confirmar la compra
   const finalizarCompra = async () => {
+    
   if (!canComprar.value) {
     alert("Completa todos los campos y selecciona al menos un asiento y un horario.");
     return;
@@ -304,33 +301,13 @@
     margin-bottom: 20px;
   }
   
-  .schedule-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-top: 10px;
-  }
+ 
   
-  .schedule-button {
-    background-color: red;
-    color: white;
-    padding: 10px 20px;
-    font-size: 18px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
   
-  .schedule-button:hover {
-    background-color: darkred;
-  }
   
-  .selected-hour {
-    margin-top: 10px;
-    font-size: 18px;
-    font-weight: bold;
-  }
+  
+  
+ 
   
   /* Mapa de butacas */
   .seat-selection {
