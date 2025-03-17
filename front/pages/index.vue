@@ -60,7 +60,6 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'nuxt/app'
-import axios from 'axios'
 
 const router = useRouter()
 const buscarPeli = ref('')
@@ -103,6 +102,28 @@ const irLogin = () => {
   }
 }
 
+//  Funcion para obtener la informacion de las peliculas
+const obtenerDetallesPelicula = async (movieId) => {
+  try {
+    const response = await fetch(`http://localhost:8000/api/movies/${movieId}`);
+    if (!response.ok) {
+      throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
+    }
+    const data = await response.json();
+    return {
+      title: data.titulo || "Título no disponible",
+      poster_url: data.url_poster || "https://via.placeholder.com/200",
+      description: data.descripcion || "Sin descripción",
+      id: data.id
+    };
+  } catch (error) {
+    console.error('Error al obtener los detalles de la película:', error);
+    return null;
+  }
+};
+
+
+
 onMounted(() => {
   const token = localStorage.getItem('auth_token')
   isLogged.value = !!token
@@ -131,21 +152,29 @@ onMounted(async () => {
 
     // Validar si `weeklyMovies` es un array antes de mapearlo
     if (Array.isArray(data.weeklyMovies) && data.weeklyMovies.length > 0) {
-      weeklyMovies.value = data.weeklyMovies.map(movie => ({
-        title: movie.titulo || "Título no disponible",
-        poster_url: movie.url_poster || "https://via.placeholder.com/200",
-        description: movie.descripcion || "Sin descripción",
-        id: movie.id
+      // Obtener los detalles de cada película asociada a las sesiones
+      const movies = await Promise.all(data.weeklyMovies.map(async (movie) => {
+        const movieDetails = await obtenerDetallesPelicula(movie.movie_id);
+        return {
+          ...movie,
+          title: movieDetails?.title || "Título no disponible",
+          poster_url: movieDetails?.poster_url || "https://via.placeholder.com/200",
+          description: movieDetails?.description || "Sin descripción",
+        };
       }));
+
+      weeklyMovies.value = movies;
     } else {
       console.warn("⚠️ No hay películas semanales disponibles");
       weeklyMovies.value = [];
     }
-
   } catch (error) {
     console.error('Error al obtener las películas:', error);
   }
 });
+
+
+
 </script>
 
 <style scoped>

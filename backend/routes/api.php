@@ -21,8 +21,9 @@ Route::get('/movies', [MovieController::class, 'index']);
 Route::get('/movie/{id}', [MovieController::class, 'show']);
 
 // Sesiones
-Route::get('/session-movies', [SessionMovieController::class, 'index']); // Para las sesiones del día y semanales
+Route::get('/session-movies', [SessionMovieController::class, 'getSessions']); // Para las sesiones del día y semanales
 Route::get('/session-movies/{id}', [SessionMovieController::class, 'show']); // Para una sesión específica
+
 
 // Compra de Entradas
 Route::post('/compra', [TicketController::class, 'comprarEntrada']);

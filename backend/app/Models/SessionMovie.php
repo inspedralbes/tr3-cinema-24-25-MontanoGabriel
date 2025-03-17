@@ -11,7 +11,7 @@ class SessionMovie extends Model
 {
     use HasFactory;
 
-    protected $table = 'sessionMovies';
+    protected $table = 'sessionmovies';
 
 
     protected $fillable = [
