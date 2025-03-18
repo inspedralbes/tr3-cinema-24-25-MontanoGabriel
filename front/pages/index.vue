@@ -84,8 +84,13 @@ const irPeliculas = () => {
 
 // Función para navegar a los detalles de la película
 const verDetalles = (movieId) => {
-  router.push(`/movie/${movieId}`)
+  if (!movieId) {
+    console.error("ID de película no válido");
+    return;
+  }
+  router.push(`/movie/${movieId}`);
 }
+
 
 // ir al perfil
 const irPerfil = () => {
@@ -105,7 +110,7 @@ const irLogin = () => {
 //  Funcion para obtener la informacion de las peliculas
 const obtenerDetallesPelicula = async (movieId) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/movies/${movieId}`);
+    const response = await fetch(`http://localhost:8000/api/movie/${movieId}`);
     if (!response.ok) {
       throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
     }
@@ -138,14 +143,25 @@ onMounted(async () => {
     }
     const data = await response.json();
 
-    // Validar si `movieOfTheDay` existe y tiene datos correctos
-    if (data.movieOfTheDay && data.movieOfTheDay.titulo) {
-      movieOfTheDay.value = {
-        title: data.movieOfTheDay.titulo || "Título no disponible",
-        poster_url: data.movieOfTheDay.url_poster || "https://via.placeholder.com/300",
-        id: data.movieOfTheDay.id
-      };
-    } else {
+    // Al recibir la película del día, utilizar `movie_id` como identificador
+if (data.movieOfTheDay && data.movieOfTheDay.movie_id) {
+  const movieId = data.movieOfTheDay.movie_id;
+  const movieResponse = await fetch(`http://localhost:8000/api/movie/${movieId}`);
+  if (!movieResponse.ok) {
+    throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
+  }
+  const movieData = await movieResponse.json();
+
+  console.log(movieData);  // Verifica que movieData tenga un id
+
+  movieOfTheDay.value = {
+    title: movieData.titulo || "Título no disponible",
+    poster_url: movieData.url_poster || "https://via.placeholder.com/300",
+    id: movieData.id || movieId  // Usa el `movie_id` si el `id` no está presente
+  };
+}
+
+ else {
       console.warn("⚠️ No hay película del día disponible");
       movieOfTheDay.value = null;
     }
@@ -160,6 +176,7 @@ onMounted(async () => {
           title: movieDetails?.title || "Título no disponible",
           poster_url: movieDetails?.poster_url || "https://via.placeholder.com/200",
           description: movieDetails?.description || "Sin descripción",
+          id: movieDetails?.id || movie.movie_id  // Aquí aseguramos que cada película tenga un `id`
         };
       }));
 
@@ -172,7 +189,6 @@ onMounted(async () => {
     console.error('Error al obtener las películas:', error);
   }
 });
-
 
 
 </script>
