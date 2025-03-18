@@ -11,7 +11,7 @@ class SessionMovie extends Model
 {
     use HasFactory;
 
-    protected $table = 'sessionmovies';
+    protected $table = 'session_movies';
 
 
     protected $fillable = [
@@ -20,7 +20,6 @@ class SessionMovie extends Model
         'time',
         'es_pelicula_del_dia',
         'es_pelicula_semanal',
-        'seats',
     ];
 
     // Relación con Movie

@@ -82,7 +82,7 @@ class SessionMovieController extends Controller
         'time' => $request->time,
         'es_pelicula_del_dia' => $request->has('es_pelicula_del_dia') ? 1 : 0,  // Guardar como 1 o 0
         'es_pelicula_semanal' => $request->has('es_pelicula_semanal') ? 1 : 0,  // Guardar como 1 o 0
-        'seats' => json_encode([]),
+        
     ]);
 
     return redirect()->route('session-movies.index');
@@ -140,6 +140,14 @@ class SessionMovieController extends Controller
 
     return redirect()->route('session-movies.index')->with('success', 'Sesión eliminada correctamente.');
 }
+ // ===================== Funciones para ver los asientos =====================
+
+public function getAsientos($session_id)
+{
+    $asientos = Asiento::where('session_movie_id', $session_id)->get();
+    return response()->json($asientos);
+}
+
 
 }
 

@@ -1,195 +1,185 @@
 <template>
-    <div class="container">
-      <!-- Navbar -->
-      <nav class="navbar">
-        <button class="nav-button" @click="goBack">⬅ Volver</button>
-        <h1>Compra de Entradas</h1>
-      </nav>
-  
-      <!-- Información de la Película -->
-      <div v-if="movie" class="movie-details">
-        <!-- Póster a la izquierda -->
-        <div class="poster">
-          <img :src="movie.poster_url" :alt="movie.title" />
-        </div>
-  
-        <!-- Información en el centro -->
-        <div class="info">
-          <h2>{{ movie.title }}</h2>
-          <p>{{ movie.description }}</p>
-        </div>
-  
-        <!-- Detalle (por ejemplo, duración) a la derecha -->
-        <div class="duration">
-          <h3>Duración:</h3>
-          <p>{{ movie.duration }} minutos</p>
-        </div>
+  <div class="container">
+    <!-- Navbar -->
+    <nav class="navbar">
+      <button class="nav-button" @click="goBack">⬅ Volver</button>
+      <h1>Compra de Entradas</h1>
+    </nav>
+
+    <!-- Información de la Película -->
+    <div v-if="movie" class="movie-details">
+      <!-- Póster a la izquierda -->
+      <div class="poster">
+        <img :src="movie.poster_url" :alt="movie.title" />
       </div>
-  
-      <!-- Selección de Horario (por ejemplo, 16:00 y 18:00) -->
-      <div class="schedule-container">
-        <p class="selected-hour" v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
+
+      <!-- Información en el centro -->
+      <div class="info">
+        <h2>{{ movie.title }}</h2>
+        <p>{{ movie.description }}</p>
       </div>
-  
-      <!-- Mapa de Butacas -->
-      <div class="seat-selection">
-        <h3>Selecciona tus asientos (máx. 10):</h3>
-        <div class="screen">🎬 Pantalla</div>
-        <div class="seating-chart">
+
+      <!-- Detalle (por ejemplo, duración) a la derecha -->
+      <div class="duration">
+        <h3>Duración:</h3>
+        <p>{{ movie.duration }} minutos</p>
+      </div>
+    </div>
+
+    <!-- Selección de Horario -->
+    <div class="schedule-container">
+      <p class="selected-hour" v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
+    </div>
+
+    <!-- Mapa de Butacas -->
+    <div class="seat-selection">
+      <h3>Selecciona tus asientos (máx. 10):</h3>
+      <div class="screen">🎬 Pantalla</div>
+      <div class="seating-chart">
+        <div v-for="(row, rowIndex) in seats" :key="rowIndex" class="seat-row">
+          <span class="row-label">{{ rowLabels[rowIndex] }}</span>
           <div
-            v-for="(row, rowIndex) in seats"
-            :key="rowIndex"
-            class="seat-row"
+            v-for="(seat, seatIndex) in row"
+            :key="seatIndex"
+            :class="['seat', seat.status]"
+            @click="toggleSeat(rowIndex, seatIndex)"
           >
-            <span class="row-label">{{ rowLabels[rowIndex] }}</span>
-            <div
-              v-for="(seat, seatIndex) in row"
-              :key="seatIndex"
-              :class="['seat', seat.status]"
-              @click="toggleSeat(rowIndex, seatIndex)"
-            >
-              {{ seatIndex + 1 }}
-            </div>
+            {{ seatIndex + 1 }}
           </div>
         </div>
-        <p v-if="selectedSeats.length" class="selected-seats">
-          Asientos seleccionados: {{ selectedSeats.join(', ') }}
-        </p>
       </div>
-  
-      <!-- Formulario de Datos Personales -->
-      <div class="form-container">
-        <h3>Introduce tus datos</h3>
-        <input type="text" v-model="user.name" placeholder="Nombre" required />
-        <input type="text" v-model="user.surname" placeholder="Apellido" required />
-        <input type="tel" v-model="user.phone" placeholder="Teléfono" required />
-      </div>
-  
-      <!-- Botón para Confirmar Compra -->
-      <div class="buy-button-container">
-        <button class="buy-button" @click="finalizarCompra" :disabled="!canComprar">
-          Confirmar Compra
-        </button>
-      </div>
-  
-      <!-- Mensaje de Confirmación o Error -->
-      <div v-if="message" class="message">
-        {{ message }}
-      </div>
-  
-      <!-- Footer -->
-      <footer class="footer">
-        © 2025 CineApp - Todos los derechos reservados
-      </footer>
+      <p v-if="selectedSeats.length" class="selected-seats">
+        Asientos seleccionados: {{ selectedSeats.join(', ') }}
+      </p>
     </div>
-  </template>
-  
-  <script setup>
-  import { ref, onMounted, computed } from 'vue'
-  import { useRoute, useRouter } from 'vue-router'
-  
-  
-  const route = useRoute()
-  const router = useRouter()
-  
-  
-  // Datos de la película
-  const movie = ref(null)
-  
-  // Hora seleccionada (obtenida de la query o por elección)
-  const selectedHour = ref(route.query.hora || '')
-  
-  // Datos de usuario
-  const user = ref({ name: "", surname: "", phone: "" })
-  
-  // Mapa de butacas: 12 filas (A-L) x 10 columnas
-  const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-  const seats = ref(
-    Array.from({ length: 12 }, () =>
-      Array.from({ length: 10 }, () => ({ status: "available" }))
-    )
+
+    <!-- Formulario de Datos Personales -->
+    <div class="form-container">
+      <h3>Introduce tus datos</h3>
+      <input type="text" v-model="user.name" placeholder="Nombre" required />
+      <input type="text" v-model="user.surname" placeholder="Apellido" required />
+      <input type="email" v-model="user.email" placeholder="Email" required />
+    </div>
+
+    <!-- Botón para Confirmar Compra -->
+    <div class="buy-button-container">
+      <button class="buy-button" @click="finalizarCompra" :disabled="!canComprar">
+        Confirmar Compra
+      </button>
+    </div>
+
+    <!-- Mensaje de Confirmación o Error -->
+    <div v-if="message" class="message">
+      {{ message }}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      © 2025 CineApp - Todos los derechos reservados
+    </footer>
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+const route = useRoute()
+const router = useRouter()
+
+// Datos de la película
+const movie = ref(null)
+
+// Hora seleccionada (obtenida de la query o por elección)
+const selectedHour = ref(route.query.hora || '')
+
+// Datos de usuario
+const user = ref({ name: '', surname: '', email: '' })
+
+// Mapa de butacas: 12 filas (A-L) x 10 columnas
+const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+const seats = ref(
+  Array.from({ length: 12 }, () =>
+    Array.from({ length: 10 }, () => ({ status: 'available' }))
   )
-  const selectedSeats = ref([])
-  
-  // Límite de butacas por sesión
-  const maxSeats = 10
-  
-  // Obtener detalles de la película
-  onMounted(async () => {
-    try {
-      const apiUrl = `http://localhost:8000/api/movie/${route.params.id}`
-      const response = await fetch(apiUrl)
-      if (!response.ok) {
-        throw new Error(`Error al obtener los detalles de la película: ${response.status}`)
-      }
-      const data = await response.json()
-      movie.value = {
-        title: data.titulo || 'Título no disponible',
-        description: data.descripcion || 'Descripción no disponible',
-        duration: data.duracion || 'Duración no disponible',
-        poster_url: data.url_poster || 'https://via.placeholder.com/200x300?text=No+Image'
-      }
-  
-      // (Opcional) Si deseas obtener los asientos ocupados desde la API, podrías hacerlo aquí
-      // Ejemplo: const seatsResponse = await axios.get(`http://localhost:8000/api/seats/${route.params.id}`)
-      // Luego marcar como "occupied" los asientos correspondientes.
-  
-    } catch (error) {
-      console.error('Error al cargar los detalles de la película:', error)
+)
+const selectedSeats = ref([])
+
+// Límite de butacas por sesión
+const maxSeats = 10
+
+// Obtener detalles de la película
+onMounted(async () => {
+  try {
+    const apiUrl = `http://localhost:8000/api/movie/${route.params.id}`
+    const response = await fetch(apiUrl)
+    if (!response.ok) {
+      throw new Error(`Error al obtener los detalles de la película: ${response.status}`)
     }
-  })
-  
-  // Función para regresar
-  const goBack = () => {
-    router.go(-1)
-  }
-  
-  // Función para seleccionar el horario
-  const setHour = (hora) => {
-    selectedHour.value = hora
-  }
-  
-  // Alternar selección de butacas
-  const toggleSeat = (rowIndex, seatIndex) => {
-    const seat = seats.value[rowIndex][seatIndex]
-    const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
-  
-    // No permitir selección si el asiento está ocupado
-    if (seat.status === "occupied") return
-  
-    if (seat.status === "selected") {
-      seat.status = "available"
-      selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
-    } else if (selectedSeats.value.length < maxSeats) {
-      seat.status = "selected"
-      selectedSeats.value.push(seatLabel)
+    const data = await response.json()
+    movie.value = {
+      title: data.titulo || 'Título no disponible',
+      description: data.descripcion || 'Descripción no disponible',
+      duration: data.duracion || 'Duración no disponible',
+      poster_url: data.url_poster || 'https://via.placeholder.com/200x300?text=No+Image'
     }
+  } catch (error) {
+    console.error('Error al cargar los detalles de la película:', error)
   }
-  
-  // Habilitar botón de compra solo si hay asientos seleccionados y se ha elegido horario y datos de usuario
-  const canComprar = computed(() => {
-    return (
-      selectedSeats.value.length > 0 &&
-      selectedHour.value &&
-      user.value.name.trim() !== "" &&
-      user.value.surname.trim() !== "" &&
-      user.value.phone.trim() !== ""
-    )
-  })
-  
-  // Función para confirmar la compra
-  const finalizarCompra = async () => {
-    
+})
+
+// Función para regresar
+const goBack = () => {
+  router.go(-1)
+}
+
+// Alternar selección de butacas
+const toggleSeat = (rowIndex, seatIndex) => {
+  const seat = seats.value[rowIndex][seatIndex]
+  const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
+
+  // No permitir selección si el asiento está ocupado
+  if (seat.status === 'occupied') return
+
+  if (seat.status === 'selected') {
+    seat.status = 'available'
+    selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
+  } else if (selectedSeats.value.length < maxSeats) {
+    seat.status = 'selected'
+    selectedSeats.value.push(seatLabel)
+  }
+}
+
+// Habilitar botón de compra solo si hay asientos seleccionados y se ha elegido horario y datos de usuario
+const canComprar = computed(() => {
+  return (
+    selectedSeats.value.length > 0 &&
+    selectedHour.value &&
+    user.value.name.trim() !== '' &&
+    user.value.surname.trim() !== '' &&
+    user.value.email.trim() !== ''
+  )
+})
+
+// Función para confirmar la compra
+const finalizarCompra = async () => {
   if (!canComprar.value) {
     alert("Completa todos los campos y selecciona al menos un asiento y un horario.");
     return;
   }
 
+  // Verifica que selectedSeats tenga valores antes de continuar
+  if (selectedSeats.value.length === 0) {
+    message.value = "No has seleccionado asientos.";
+    return;
+  }
+
   // El formato de los asientos debería ser [{ row: "A", seat: 1 }, { row: "A", seat: 2 }]
-  const selectedSeats = [
-    { row: "A", seat: 1 },
-    { row: "A", seat: 2 }
-  ];
+  const selectedSeatsFormatted = selectedSeats.value.map(seatLabel => {
+    const row = seatLabel[0]; // Primera letra (por ejemplo, "A")
+    const seat = parseInt(seatLabel.substring(1)); // El número de asiento (por ejemplo, 1)
+    return { row, seat };
+  });
 
   try {
     const response = await fetch("http://localhost:8000/api/compra", {
@@ -199,10 +189,10 @@
         'Accept': 'application/json',
       },
       body: JSON.stringify({
-        session_id: selectedSessionId,  // Este valor debe ser el id de la sesión de la tabla sessionmovies
-        seats: selectedSeats,           // Los asientos seleccionados con formato { row, seat }
-        user_id: user.value.id,         // El id del usuario que compra las entradas
-        hour: selectedHour.value,       // La hora seleccionada
+        session_id: route.params.id, // Este valor debe ser el id de la sesión
+        seats: selectedSeatsFormatted,  // Los asientos seleccionados con formato { row, seat }
+        user: user.value,             // Asegúrate de que `user` esté correctamente estructurado
+        hour: selectedHour.value,     // La hora seleccionada
       }),
     });
 
@@ -221,11 +211,8 @@
 
 
 
-
-
-  
-  const message = ref("")
-  </script>
+const message = ref('')
+</script>
   
   <style scoped>
   /* Contenedor principal */

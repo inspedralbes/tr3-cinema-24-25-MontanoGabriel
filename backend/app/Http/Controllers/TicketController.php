@@ -10,70 +10,51 @@ class TicketController extends Controller
 {
     // Crear una nueva entrada para una sesión
     public function comprarEntrada(Request $request)
-    {
-        // Validar los datos recibidos
-        $validated = $request->validate([
-            'sessionmovies_id' => 'required|integer|exists:sessionmovies,id', // Cambiar sessions por sessionmovies
-            'seats' => 'required|array', // Asientos seleccionados
-            'user_id' => 'required|integer|exists:users,id', // ID del usuario
-            'hour' => 'required|string', // Hora de la sesión
+{
+    $request->validate([
+        'user_id' => 'required|exists:users,id',
+        'session_movie_id' => 'required|exists:session_movies,id',
+        'asientos' => 'required|array', // Lista de asientos a comprar
+        'asientos.*.row' => 'required|string',
+        'asientos.*.asiento_number' => 'required|integer',
+    ]);
+
+    DB::beginTransaction();
+
+    try {
+        // Crear el ticket
+        $ticket = Ticket::create([
+            'user_id' => $request->user_id,
+            'session_movie_id' => $request->session_movie_id,
         ]);
 
-        // Obtener la sesión correspondiente
-        $session = SessionMovie::find($validated['sessionmovies_id']);
-        if (!$session) {
-            return response()->json(['message' => 'Sesión no encontrada.'], 404);
-        }
+        // Marcar los asientos como ocupados y vincularlos al ticket
+        foreach ($request->asientos as $seat) {
+            $asiento = Asiento::where('session_movie_id', $request->session_movie_id)
+                ->where('row', $seat['row'])
+                ->where('asiento_number', $seat['asiento_number'])
+                ->first();
 
-        // Verificar si ya existe una compra previa para el usuario y la sesión
-        $existingTicket = Ticket::where('sessionmovies_id', $validated['sessionmovies_id'])
-                                ->where('user_id', $validated['user_id'])
-                                ->first();
-
-        if ($existingTicket) {
-            return response()->json(['message' => 'Ya has comprado entradas para esta sesión.'], 400);
-        }
-
-        // Decodificar el JSON de asientos
-        $seats = json_decode($session->seats, true);
-        
-        // Comprobar y actualizar el estado de los asientos seleccionados
-        foreach ($validated['seats'] as $selectedSeat) {
-            $row = $selectedSeat['row'];
-            $seat = $selectedSeat['seat'];
-
-            // Verificar si la fila existe
-            if (!isset($seats[$row])) {
-                return response()->json(['message' => "La fila $row no existe."], 400);
-            }
-
-            // Buscar el asiento en la fila
-            $seatIndex = array_search($seat, array_column($seats[$row], 'seat'));
-
-            if ($seatIndex !== false && $seats[$row][$seatIndex]['status'] === 'available') {
-                // Marcar el asiento como ocupado
-                $seats[$row][$seatIndex]['status'] = 'occupied';
+            if ($asiento && $asiento->status === 'available') {
+                $asiento->update(['status' => 'occupied']);
+                TicketAsiento::create([
+                    'ticket_id' => $ticket->id,
+                    'asiento_id' => $asiento->id,
+                ]);
             } else {
-                return response()->json(['message' => "El asiento $seat de la fila $row ya está ocupado o no existe."], 400);
+                return response()->json(['error' => 'Uno o más asientos ya están ocupados'], 400);
             }
         }
 
-        // Guardar el nuevo estado de los asientos en la base de datos
-        $session->seats = json_encode($seats);
-        $session->save();
+        DB::commit();
+        return response()->json(['message' => 'Compra realizada con éxito'], 201);
 
-        // Crear el ticket para cada asiento seleccionado
-        foreach ($validated['seats'] as $selectedSeat) {
-            Ticket::create([
-                'sessionmovies_id' => $validated['sessionmovies_id'],
-                'user_id' => $validated['user_id'],
-                'seat' => $selectedSeat['seat'],
-                'row' => $selectedSeat['row'], // Asegúrate de guardar la fila también
-                'hour' => $validated['hour'],
-            ]);
-        }
-
-        return response()->json(['message' => 'Compra realizada con éxito'], 200);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json(['error' => 'Error en la compra', 'details' => $e->getMessage()], 500);
     }
+}
+
+
 }
 
