@@ -8,28 +8,16 @@
 
     <!-- Información de la Película -->
     <div v-if="movie" class="movie-details">
-      <!-- Póster a la izquierda -->
-      <div class="poster">
-        <img :src="movie.poster_url" :alt="movie.title" />
-      </div>
-
-      <!-- Información en el centro -->
+      <img class="poster" :src="movie.poster_url" :alt="movie.title" />
       <div class="info">
         <h2>{{ movie.title }}</h2>
         <p>{{ movie.description }}</p>
-      </div>
-
-      <!-- Detalle (por ejemplo, duración) a la derecha -->
-      <div class="duration">
-        <h3>Duración:</h3>
-        <p>{{ movie.duration }} minutos</p>
+        <h3>Duración: {{ movie.duration }} minutos</h3>
       </div>
     </div>
 
     <!-- Selección de Horario -->
-    <div class="schedule-container">
-      <p class="selected-hour" v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
-    </div>
+    <p v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
 
     <!-- Mapa de Butacas -->
     <div class="seat-selection">
@@ -41,178 +29,257 @@
           <div
             v-for="(seat, seatIndex) in row"
             :key="seatIndex"
-            :class="['seat', seat.status]"
-            @click="toggleSeat(rowIndex, seatIndex)"
-          >
+            :class="['seat', seat.status, seat.type]" 
+            @click="toggleSeat(rowIndex, seatIndex)">
             {{ seatIndex + 1 }}
           </div>
         </div>
       </div>
-      <p v-if="selectedSeats.length" class="selected-seats">
-        Asientos seleccionados: {{ selectedSeats.join(', ') }}
-      </p>
+      <p v-if="selectedSeats.length">Asientos: {{ selectedSeats.join(', ') }}</p>
+      <p v-if="selectedSeats.length">Precio Total: {{ totalPrice.toFixed(2) }} €</p> <!-- Mostrar el precio total con 2 decimales -->
     </div>
 
-    <!-- Formulario de Datos Personales -->
-    <div class="form-container">
-      <h3>Introduce tus datos</h3>
-      <input type="text" v-model="user.name" placeholder="Nombre" required />
-      <input type="text" v-model="user.surname" placeholder="Apellido" required />
-      <input type="email" v-model="user.email" placeholder="Email" required />
+    
+
+    <!-- Opciones de compra -->
+    <div>
+      <button @click="isQuickPurchase = true">Comprar Rápido</button>
+      <button @click="isQuickPurchase = false">Registrarse y Comprar</button>
     </div>
 
-    <!-- Botón para Confirmar Compra -->
-    <div class="buy-button-container">
-      <button class="buy-button" @click="finalizarCompra" :disabled="!canComprar">
-        Confirmar Compra
-      </button>
+    <!-- Formulario de Compra Rápida -->
+    <div v-if="isQuickPurchase">
+      <h3>Compra Rápida</h3>
+      <input v-model="quickPurchaseData.name" placeholder="Nombre" />
+      <input v-model="quickPurchaseData.surname" placeholder="Apellido" />
+      <input v-model="quickPurchaseData.email" placeholder="Correo" />
+      <button @click="finalizarCompraRapida">Comprar Ahora</button>
     </div>
 
-    <!-- Mensaje de Confirmación o Error -->
-    <div v-if="message" class="message">
-      {{ message }}
+    <!-- Formulario de Registro y Compra -->
+    <div v-else-if="!isRegistered">
+      <h3>Registrarse y Comprar</h3>
+      <input v-model="user.name" placeholder="Nombre" />
+      <input v-model="user.surname" placeholder="Apellido" />
+      <input v-model="user.email" placeholder="Correo" />
+      <button @click="registrarUsuario">Registrarse y Comprar</button>
     </div>
 
     <!-- Footer -->
-    <footer class="footer">
-      © 2025 CineApp - Todos los derechos reservados
-    </footer>
+    <footer class="footer">© 2025 CineApp - Todos los derechos reservados</footer>
   </div>
 </template>
 
-<script setup>
-import { ref, onMounted, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+  <script setup>
+  import { ref, onMounted, computed, watch } from 'vue'
+  import { useRoute, useRouter } from 'vue-router'
 
-const route = useRoute()
-const router = useRouter()
+  const route = useRoute()
+  const router = useRouter()
 
-// Datos de la película
-const movie = ref(null)
+  // Estados para compra rápida y registro
+  const isQuickPurchase = ref(false)
+  const isRegistered = ref(false)
 
-// Hora seleccionada (obtenida de la query o por elección)
-const selectedHour = ref(route.query.hora || '')
+  // Datos para compra rápida y para usuario autenticado
+  const quickPurchaseData = ref({ name: '', surname: '', email: '' })
+  const user = ref({ name: '', surname: '', email: '', id: null })
 
-// Datos de usuario
-const user = ref({ name: '', surname: '', email: '' })
+  // Datos de la película
+  const movie = ref(null)
+  const selectedHour = ref(route.query.hora || '')
 
-// Mapa de butacas: 12 filas (A-L) x 10 columnas
-const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
-const seats = ref(
-  Array.from({ length: 12 }, () =>
-    Array.from({ length: 10 }, () => ({ status: 'available' }))
+  // Configuración del mapa de butacas
+  const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
+  const seats = ref(
+    Array.from({ length: 12 }, (_, rowIndex) =>
+      Array.from({ length: 10 }, () => ({
+        status: 'available',
+        // Fila 6 (índice 5) es VIP
+        type: rowIndex === 5 ? 'vip' : 'normal'
+      }))
+    )
   )
-)
-const selectedSeats = ref([])
+  const selectedSeats = ref([])
+  const maxSeats = 10
 
-// Límite de butacas por sesión
-const maxSeats = 10
+  // Calcular el precio total
+  const totalPrice = computed(() => {
+    return selectedSeats.value.reduce((sum, seatLabel) => {
+      const row = rowLabels.indexOf(seatLabel.charAt(0))
+      // Si la fila es VIP, precio 8; de lo contrario, 6
+      const price = (row === 5) ? 8 : 6
+      return sum + price
+    }, 0)
+  })
 
-// Obtener detalles de la película
-onMounted(async () => {
-  try {
-    const apiUrl = `http://localhost:8000/api/movie/${route.params.id}`
-    const response = await fetch(apiUrl)
-    if (!response.ok) {
-      throw new Error(`Error al obtener los detalles de la película: ${response.status}`)
+  // Función para cargar la película
+  onMounted(async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/movie/${route.params.id}`)
+      if (!response.ok) throw new Error('Error al obtener la película')
+      const data = await response.json()
+      movie.value = {
+        title: data.titulo,
+        description: data.descripcion,
+        duration: data.duracion,
+        poster_url: data.url_poster || 'https://via.placeholder.com/200x300?text=No+Image'
+      }
+    } catch (error) {
+      console.error(error)
     }
-    const data = await response.json()
-    movie.value = {
-      title: data.titulo || 'Título no disponible',
-      description: data.descripcion || 'Descripción no disponible',
-      duration: data.duracion || 'Duración no disponible',
-      poster_url: data.url_poster || 'https://via.placeholder.com/200x300?text=No+Image'
+  })
+
+  // Función para regresar
+  const goBack = () => router.go(-1)
+
+  // Alternar selección de asientos
+  const toggleSeat = (rowIndex, seatIndex) => {
+    const seat = seats.value[rowIndex][seatIndex]
+    const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
+    if (seat.status === 'occupied') return
+    if (seat.status === 'selected') {
+      seat.status = 'available'
+      selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
+    } else if (selectedSeats.value.length < maxSeats) {
+      seat.status = 'selected'
+      selectedSeats.value.push(seatLabel)
     }
-  } catch (error) {
-    console.error('Error al cargar los detalles de la película:', error)
-  }
-})
-
-// Función para regresar
-const goBack = () => {
-  router.go(-1)
-}
-
-// Alternar selección de butacas
-const toggleSeat = (rowIndex, seatIndex) => {
-  const seat = seats.value[rowIndex][seatIndex]
-  const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
-
-  // No permitir selección si el asiento está ocupado
-  if (seat.status === 'occupied') return
-
-  if (seat.status === 'selected') {
-    seat.status = 'available'
-    selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
-  } else if (selectedSeats.value.length < maxSeats) {
-    seat.status = 'selected'
-    selectedSeats.value.push(seatLabel)
-  }
-}
-
-// Habilitar botón de compra solo si hay asientos seleccionados y se ha elegido horario y datos de usuario
-const canComprar = computed(() => {
-  return (
-    selectedSeats.value.length > 0 &&
-    selectedHour.value &&
-    user.value.name.trim() !== '' &&
-    user.value.surname.trim() !== '' &&
-    user.value.email.trim() !== ''
-  )
-})
-
-// Función para confirmar la compra
-const finalizarCompra = async () => {
-  if (!canComprar.value) {
-    alert("Completa todos los campos y selecciona al menos un asiento y un horario.");
-    return;
   }
 
-  // Verifica que selectedSeats tenga valores antes de continuar
-  if (selectedSeats.value.length === 0) {
-    message.value = "No has seleccionado asientos.";
-    return;
-  }
+  // Guardar asientos seleccionados en localStorage (opcional)
+  watch(selectedSeats, newSeats => {
+    localStorage.setItem('selectedSeats', JSON.stringify(newSeats))
+  })
 
-  // El formato de los asientos debería ser [{ row: "A", seat: 1 }, { row: "A", seat: 2 }]
-  const selectedSeatsFormatted = selectedSeats.value.map(seatLabel => {
-    const row = seatLabel[0]; // Primera letra (por ejemplo, "A")
-    const seat = parseInt(seatLabel.substring(1)); // El número de asiento (por ejemplo, 1)
-    return { row, seat };
-  });
-
-  try {
-    const response = await fetch("http://localhost:8000/api/compra", {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify({
-        session_id: route.params.id, // Este valor debe ser el id de la sesión
-        seats: selectedSeatsFormatted,  // Los asientos seleccionados con formato { row, seat }
-        user: user.value,             // Asegúrate de que `user` esté correctamente estructurado
-        hour: selectedHour.value,     // La hora seleccionada
-      }),
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      message.value = data.message || "Compra realizada con éxito.";
-    } else {
-      const errorData = await response.json();
-      message.value = errorData.message || "Error al procesar la compra.";
+  // Funciones de compra
+  const validarCompra = (datosUsuario) => {
+    if (!datosUsuario.name || !datosUsuario.surname || !datosUsuario.email) {
+      alert("Completa todos los campos.")
+      return false
     }
-  } catch (error) {
-    console.error("Error al comprar:", error);
-    message.value = "Error al procesar la compra.";
+    if (selectedSeats.value.length === 0) {
+      alert("Selecciona al menos un asiento.")
+      return false
+    }
+    if (!selectedHour.value) {
+      alert("Selecciona un horario.")
+      return false
+    }
+    return true
   }
-};
+
+  const finalizarCompra = async (datosUsuario) => {
+    if (!validarCompra(datosUsuario)) return
+
+    // Formatear los asientos: { row: "A", seat: 1 }
+    const selectedSeatsFormatted = selectedSeats.value.map(label => ({
+      row: label.charAt(0),
+      seat: parseInt(label.substring(1), 10)
+    }))
+
+    // Construir el cuerpo de la solicitud
+    const requestBody = {
+      session_movie_id: route.params.id,
+      seats: selectedSeatsFormatted,
+      user_id: datosUsuario.id, // Para compra normal el usuario ya estará autenticado
+      name: quickPurchaseData.value.name,
+      surname: quickPurchaseData.value.surname,
+      email: quickPurchaseData.value.email,
+      total_price: totalPrice.value
+    }
+
+    console.log("Enviando datos:", requestBody)
+
+    try {
+      const response = await fetch("http://localhost:8000/api/compra", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      })
+      if (response.ok) {
+        const data = await response.json()
+        alert("Compra realizada con éxito.")
+      } else {
+        const errorData = await response.json()
+        console.error("Error de la API:", errorData)
+        alert("Error al procesar la compra.")
+      }
+    } catch (error) {
+      console.error("Error en la compra:", error)
+      alert("Hubo un problema con la compra.")
+    }
+  }
+
+  const finalizarCompraRapida = async () => {
+    if (!validarCompra(quickPurchaseData.value)) return
+    // Para la compra rápida, no se requiere user_id
+    const selectedSeatsFormatted = selectedSeats.value.map(label => ({
+      row: label.charAt(0),
+      seat: parseInt(label.substring(1), 10)
+    }))
 
 
+    const requestBody = {
+      session_movie_id: route.params.id,
+      seats: selectedSeatsFormatted,
+      user_id: null, // No hay usuario registrado
+      name: quickPurchaseData.value.name,
+      surname: quickPurchaseData.value.surname,
+      email: quickPurchaseData.value.email,
+      total_price: totalPrice.value
+    }
 
-const message = ref('')
-</script>
+    console.log("Enviando datos (compra rápida):", requestBody)
+
+    try {
+      const response = await fetch("http://localhost:8000/api/compra", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      })
+      if (response.ok) {
+        const data = await response.json()
+        alert("Compra realizada con éxito.")
+      } else {
+        const errorData = await response.json()
+        console.error("Error de la API:", errorData)
+        alert("Error al procesar la compra.")
+      }
+    } catch (error) {
+      console.error("Error en la compra rápida:", error)
+      alert("Hubo un problema con la compra rápida.")
+    }
+  }
+
+  const registrarUsuario = async () => {
+    if (!validarCompra(user.value)) return
+    try {
+      const response = await fetch("http://localhost:8000/api/registro", {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user.value)
+      })
+      if (response.ok) {
+        const data = await response.json()
+        user.value.id = data.user.id
+        isRegistered.value = true
+        // Luego realizar la compra
+        finalizarCompra(user.value)
+      } else {
+        const errorData = await response.json()
+        console.error("Error en el registro:", errorData)
+        alert("Error al registrar el usuario.")
+      }
+    } catch (error) {
+      console.error("Error en el registro:", error)
+      alert("Hubo un problema con el registro.")
+    }
+  }
+
+  const message = ref('')
+  </script>
+
   
   <style scoped>
   /* Contenedor principal */
@@ -287,14 +354,10 @@ const message = ref('')
     text-align: center;
     margin-bottom: 20px;
   }
-  
- 
-  
-  
-  
-  
-  
- 
+  .seat.vip {
+  background-color: yellow !important;
+}
+
   
   /* Mapa de butacas */
   .seat-selection {
