@@ -42,6 +42,27 @@ class CompraController extends Controller
     
         return response()->json(['message' => 'Compra realizada con éxito', 'ticket' => $ticket], 201);
     }
+
+    // En el controlador `CompraController.php` o `TicketController.php`
+public function obtenerAsientosOcupados($idSesionPelicula)
+{
+    // Obtener los tickets de la sesión de la película
+    $entradas = Ticket::where('session_movie_id', $idSesionPelicula)
+                      ->pluck('seats') // Obtener los asientos ocupados
+                      ->toArray();
+
+    // Convertir los asientos ocupados en una lista de asientos
+    $asientosOcupados = [];
+    foreach ($entradas as $entrada) {
+        foreach (json_decode($entrada) as $asiento) {
+            $asientosOcupados[] = $asiento->row . $asiento->seat;
+        }
+    }
+
+    // Devolver los asientos ocupados
+    return response()->json(['asientosOcupados' => $asientosOcupados]);
+}
+
     
 }
 

@@ -127,11 +127,6 @@ class SessionMovieController extends Controller
         return redirect()->back()->with('error', 'Hubo un error al actualizar la sesión.');
     }
 }
-
-
-
-
-
     // Eliminar una sesión
     public function destroy($id)
 {
@@ -139,13 +134,6 @@ class SessionMovieController extends Controller
     $sessionMovie->delete();
 
     return redirect()->route('session-movies.index')->with('success', 'Sesión eliminada correctamente.');
-}
- // ===================== Funciones para ver los asientos =====================
-
-public function getAsientos($session_id)
-{
-    $asientos = Asiento::where('session_movie_id', $session_id)->get();
-    return response()->json($asientos);
 }
 
 

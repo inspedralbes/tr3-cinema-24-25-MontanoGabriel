@@ -29,7 +29,7 @@
           <div
             v-for="(seat, seatIndex) in row"
             :key="seatIndex"
-            :class="['seat', seat.status, seat.type]" 
+            :class="['seat', seat.status, seat.type, { 'occupied': seat.status === 'occupied' } ]" 
             @click="toggleSeat(rowIndex, seatIndex)">
             {{ seatIndex + 1 }}
           </div>
@@ -70,12 +70,13 @@
   </div>
 </template>
 
-  <script setup>
+<script setup>
   import { ref, onMounted, computed, watch } from 'vue'
   import { useRoute, useRouter } from 'vue-router'
 
   const route = useRoute()
   const router = useRouter()
+
 
   // Estados para compra rápida y registro
   const isQuickPurchase = ref(false)
@@ -137,6 +138,7 @@
   const toggleSeat = (rowIndex, seatIndex) => {
     const seat = seats.value[rowIndex][seatIndex]
     const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
+    // No permite seleccionar asientos ocupados 
     if (seat.status === 'occupied') return
     if (seat.status === 'selected') {
       seat.status = 'available'
@@ -276,9 +278,33 @@
       alert("Hubo un problema con el registro.")
     }
   }
-
   const message = ref('')
-  </script>
+
+  // Solicitud para obtener los asientos ocupados
+  onMounted(async () => {
+  try {
+    const response = await fetch(`http://localhost:8000/api/asientos-ocupados/${route.params.id}`)
+    if (!response.ok) throw new Error('Error al obtener los asientos ocupados')
+    const data = await response.json()
+    
+    // Almacenar los asientos ocupados
+    const asientosOcupados = data.asientosOcupados || []
+
+    // Marcar los asientos ocupados en el mapa de butacas
+    for (const rowIndex in seats.value) {
+      for (const seatIndex in seats.value[rowIndex]) {
+        const seatLabel = `${rowLabels[rowIndex]}${parseInt(seatIndex) + 1}`
+        if (asientosOcupados.includes(seatLabel)) {
+          seats.value[rowIndex][seatIndex].status = 'occupied'
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error)
+  }
+})
+
+</script>
 
   
   <style scoped>
@@ -357,6 +383,11 @@
   .seat.vip {
   background-color: yellow !important;
 }
+.seat.vip.occupied {
+  background-color: red !important;
+  cursor: not-allowed;
+}
+
 
   
   /* Mapa de butacas */
@@ -411,6 +442,8 @@
     background-color: red;
     cursor: not-allowed;
   }
+  /* Estilo para asientos VIP ocupados */
+  
   
   .seat.selected {
     background-color: green;
