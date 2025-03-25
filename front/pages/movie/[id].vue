@@ -26,15 +26,24 @@
       </div>
     </div>
 
-    <!-- Horarios disponibles -->
-    <div class="schedule-container">
-      <h3>Horarios disponibles:</h3>
-      <div class="schedule-buttons">
-        <button class="schedule-button" @click="comprarEntrada('16:00')">16:00</button>
-        <button class="schedule-button" @click="comprarEntrada('18:00')">18:00</button>
-        <button class="schedule-button" @click="comprarEntrada('20:00')">20:00</button>
-      </div>
-    </div>
+    <!-- Horarios disponibles (Solo si la película es la película del día) -->
+<div v-if="esPeliculaDelDia" class="Horario-diponible">
+  <h3>Horarios disponibles:</h3>
+  <div class="schedule-buttons">
+    <button 
+      v-for="hora in horarios" 
+      :key="hora" 
+      class="schedule-button" 
+      @click="comprarEntrada(hora)"
+    >
+      {{ hora }}
+    </button>
+  </div>
+</div>
+<div v-if="!esPeliculaDelDia" class="Horario-no-disponible">
+  <h3>No hay horarios disponibles para esta película hoy.</h3>
+</div>
+
 
     <!-- Footer -->
     <footer class="footer">
@@ -47,12 +56,80 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-const movie = ref(null)
 const route = useRoute()
 const router = useRouter()
 
 // Obtener el ID de la película desde los parámetros de la ruta
 const movieId = route.params.id
+const horarios = ref([]);
+const movie = ref(null)
+const esPeliculaDelDia = ref(false);
+
+const cargarHorarios = async () => {
+  try {
+    // Hacemos la solicitud para obtener los horarios
+    const response = await fetch(`http://localhost:8000/api/session-movies`);
+    if (!response.ok) throw new Error('Error al obtener los horarios');
+    
+    // Convertimos la respuesta a JSON
+    const data = await response.json();
+
+    // Inicializamos las variables para los horarios y la película seleccionada
+    const sesiones = [];
+// Reiniciar valores
+    horarios.value = [];
+    esPeliculaDelDia.value = false;
+
+    let peliculaSeleccionada = null;
+
+    // Obtenemos la película del día y las películas semanales
+    const peliculaDelDia = data.movieOfTheDay;
+    const peliculasSemanales = data.weeklyMovies;
+
+     // Verificamos si hay una película del día y si coincide con el movieId
+     if (peliculaDelDia && peliculaDelDia.movie_id === parseInt(movieId)) {
+       esPeliculaDelDia.value = true; // Confirmamos que es la película del día
+     }
+
+    // Buscamos los horarios en las películas semanales
+    peliculasSemanales.forEach((peli) => {
+      if (peli.movie_id === parseInt(movieId)) {
+        sesiones.push(peli.time);  // Agregamos los horarios correspondientes
+        if (!peliculaSeleccionada) {
+          peliculaSeleccionada = peli;  // Asignamos los detalles de la película si no se ha asignado aún
+        }
+      }
+    });
+
+    // Asignamos los horarios a la variable reactiva
+    horarios.value = sesiones;
+
+    // Verificamos que se haya encontrado la película
+    if (peliculaSeleccionada) {
+      movie.value = {
+        title: peliculaSeleccionada.title || 'Título no disponible',
+        description: peliculaSeleccionada.description || 'Descripción no disponible',
+        duration: peliculaSeleccionada.duration || 'Duración no disponible',
+        poster_url: peliculaSeleccionada.poster_url || 'Poster de la pelicula no disponible',
+      };
+    } else {
+      console.warn('No se encontró la película con el ID especificado');
+    }
+
+  } catch (error) {
+    console.error('Error al cargar los horarios y los detalles de la película:', error);
+  }
+};
+
+
+
+
+// Llamamos a la función cuando el componente se monta
+onMounted(() => {
+  cargarHorarios();
+});
+
+
 
 onMounted(async () => {
   try {
@@ -78,6 +155,7 @@ onMounted(async () => {
     console.error('Error al cargar los detalles de la película:', error)
   }
 })
+
 
 // Función para regresar a la página anterior
 const goBack = () => {
@@ -155,9 +233,12 @@ const comprarEntrada = (hora) => {
 }
 
 /* Contenedor de los horarios */
-.schedule-container {
+.Horario-diponible {
   text-align: center;
   margin-top: 20px;
+}
+.Horario-no-disponible{
+  text-align: center;
 }
 
 .schedule-buttons {

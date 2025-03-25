@@ -11,10 +11,11 @@ class SessionMovieController extends Controller
     // ===================== Funciones para el Frontend (API) =====================
 
     // Obtener las sesiones del día y semanales
-    public function getSessions()
+    public function getSessions(Request $request)
 {
     // Obtener la película del día
-    $peliculaDelDia = SessionMovie::where('es_pelicula_del_dia', true)->first();
+    $peliculaDelDia = SessionMovie::where('es_pelicula_del_dia', true)->first(); 
+
     
     // Si no hay película del día, tomar la primera disponible (si existe)
     if (!$peliculaDelDia) {
@@ -43,6 +44,7 @@ class SessionMovieController extends Controller
     ]);
 }
 
+    
 
     // ===================== Funciones para el CRUD (Backend) =====================
 

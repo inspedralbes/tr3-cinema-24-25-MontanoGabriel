@@ -161,7 +161,7 @@ if (data.movieOfTheDay && data.movieOfTheDay.movie_id) {
   };
 }
 
- else {
+ else {x
       console.warn("⚠️ No hay película del día disponible");
       movieOfTheDay.value = null;
     }

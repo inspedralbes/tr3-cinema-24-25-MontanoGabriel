@@ -30,6 +30,6 @@ Route::get('/session-movies/{id}', [SessionMovieController::class, 'show']); // 
 Route::post('/compra', [CompraController::class, 'store']);
 
 // Rutas para obtener los asientos ocupados
-Route::get('asientos-ocupados/{id_sesion_pelicula}', [CompraController::class, 'obtenerAsientosOcupados']);
+Route::get('/asientos-ocupados/{id_sesion_pelicula}', [CompraController::class, 'obtenerAsientosOcupados']);
 
 
