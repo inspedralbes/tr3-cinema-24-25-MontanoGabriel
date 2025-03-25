@@ -1,23 +1,6 @@
 <template>
   <div class="container">
-    <!-- Barra de Navegación -->
-    <nav class="navbar">
-      <button class="nav-button">Home</button>
-      <input
-        type="text"
-        v-model="buscarPeli"
-        placeholder="Buscar..."
-        class="search-bar"
-      />
-      <button class="nav-calendar" @click="irCalendario">Sesión semanal</button>
-      <button class="nav-button"@click="irPeliculas">Todas las peliculas</button>
-      <button class="nav-button">🛒</button>
-      <!-- Botón de perfil o ícono de login según si está logueado -->
-      <div v-if="isLogged" class="profile-photo" @click="irPerfil">
-        <img class="loginIcon" :src="profilePhoto" alt="Foto de perfil" />
-      </div>
-      <button v-else class="nav-button" @click="irLogin">Login</button>
-    </nav>
+    
 
     <!-- Contenido Principal -->
     <div class="content">
@@ -50,10 +33,7 @@
       </section>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">
-      © 2025 CineApp - Todos los derechos reservados
-    </footer>
+    
   </div>
 </template>
 
@@ -72,14 +52,7 @@ const diasSemana = ['lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sába
 const movieOfTheDay = ref(null)
 const weeklyMovies = ref([])
 
-// Función para navegar a la página del calendario
-const irCalendario = () => {
-  router.push('/Calendar')
-}
-// Ir a todas las peliculas
-const irPeliculas = () => {
-  router.push('/peliculas')
-}
+
 
 
 // Función para navegar a los detalles de la película
@@ -89,22 +62,6 @@ const verDetalles = (movieId) => {
     return;
   }
   router.push(`/movie/${movieId}`);
-}
-
-
-// ir al perfil
-const irPerfil = () => {
-  router.push('/perfil')
-}
-
-// Función para navegar a la página de login o al perfil si esta logeado
-const irLogin = () => {
-  const token = localStorage.getItem('auth_token')
-  if (token) {
-    router.push('/perfil')
-  } else {
-    router.push('/login')
-  }
 }
 
 //  Funcion para obtener la informacion de las peliculas
@@ -151,8 +108,6 @@ if (data.movieOfTheDay && data.movieOfTheDay.movie_id) {
     throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
   }
   const movieData = await movieResponse.json();
-
-  console.log(movieData);  // Verifica que movieData tenga un id
 
   movieOfTheDay.value = {
     title: movieData.titulo || "Título no disponible",

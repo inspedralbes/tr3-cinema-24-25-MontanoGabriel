@@ -1,20 +1,5 @@
 <template>
   <div class="container">
-    <!-- Navbar -->
-    <nav class="navbar">
-      <button class="nav-button">Inicio/logo</button>
-      <input
-        type="text"
-        v-model="buscarPeli"
-        placeholder="Buscar..."
-        class="search-bar"
-      />
-      <button class="nav-calendar">Sesión semanal</button>
-      <button class="nav-button">Sesión del día</button>
-      <button class="nav-button">🛒</button>
-      <button class="nav-button">Ícono login</button>
-    </nav>
-
     <!-- Contenido principal -->
     <div class="content">
       <h1 class="title">Películas Semanales</h1>
@@ -33,11 +18,6 @@
 
       <p v-else class="loading-text">Cargando películas...</p>
     </div>
-
-    <!-- Footer -->
-    <footer class="footer">
-      © 2025 CineApp - Todos los derechos reservados
-    </footer>
   </div>
 </template>
 
@@ -45,7 +25,6 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
-const buscarPeli = ref('')
 const weeklyMovies = ref([]) // Aquí se guardarán las películas semanales
 const router = useRouter()
 
@@ -122,26 +101,6 @@ onMounted(() => {
   background-color: #e5e7eb;
 }
 
-/* Navbar */
-.navbar {
-  background-color: gray;
-  padding: 25px;
-  display: flex;
-  justify-content: space-around;
-  color: black;
-}
-
-.nav-button, .nav-calendar {
-  background-color: gainsboro;
-  border: none;
-  padding: 8px 12px;
-  cursor: pointer;
-}
-
-.search-bar {
-  padding: 8px;
-}
-
 /* Contenido */
 .content {
   flex-grow: 1;
@@ -196,17 +155,8 @@ onMounted(() => {
 /* Texto de carga */
 .loading-text {
   font-size: 1.2rem;
-  color: #666;
+  color: #1976d2;
   font-weight: bold;
   margin-top: 20px;
-}
-
-/* Footer */
-.footer {
-  background-color: #a1a1a1;
-  padding: 15px;
-  text-align: center;
-  color: black;
-  font-weight: bold;
 }
 </style>

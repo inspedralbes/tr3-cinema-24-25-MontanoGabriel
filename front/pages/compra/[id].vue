@@ -65,9 +65,7 @@
       <button @click="registrarUsuario">Registrarse y Comprar</button>
     </div>
 
-    <!-- Footer -->
-    <footer class="footer">© 2025 CineApp - Todos los derechos reservados</footer>
-  </div>
+   </div>
 </template>
 
 <script setup>
@@ -76,6 +74,10 @@
 
   const route = useRoute()
   const router = useRouter()
+  definePageMeta({
+  layout: false,
+});
+
 
 
   // Estados para compra rápida y registro
@@ -496,14 +498,6 @@
     margin-top: 10px;
   }
   
-  /* Footer */
-  .footer {
-    background-color: #a1a1a1;
-    padding: 15px;
-    text-align: center;
-    color: black;
-    font-weight: bold;
-    margin-top: auto;
-  }
+  
   </style>
   

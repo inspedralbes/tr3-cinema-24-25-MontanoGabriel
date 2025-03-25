@@ -27,28 +27,22 @@
     </div>
 
     <!-- Horarios disponibles (Solo si la película es la película del día) -->
-<div v-if="esPeliculaDelDia" class="Horario-diponible">
-  <h3>Horarios disponibles:</h3>
-  <div class="schedule-buttons">
-    <button 
-      v-for="hora in horarios" 
-      :key="hora" 
-      class="schedule-button" 
-      @click="comprarEntrada(hora)"
-    >
-      {{ hora }}
-    </button>
-  </div>
-</div>
-<div v-if="!esPeliculaDelDia" class="Horario-no-disponible">
-  <h3>No hay horarios disponibles para esta película hoy.</h3>
-</div>
-
-
-    <!-- Footer -->
-    <footer class="footer">
-      © 2025 CineApp - Todos los derechos reservados
-    </footer>
+    <div v-if="esPeliculaDelDia" class="Horario-diponible">
+      <h3>Horarios disponibles:</h3>
+      <div class="schedule-buttons">
+        <button 
+          v-for="hora in horarios" 
+          :key="hora" 
+          class="schedule-button" 
+          @click="comprarEntrada(hora)"
+        >
+          {{ hora }}
+        </button>
+      </div>
+    </div>
+    <div v-if="!esPeliculaDelDia" class="Horario-no-disponible">
+      <h3>No hay horarios disponibles para esta película hoy.</h3>
+    </div>
   </div>
 </template>
 
@@ -58,6 +52,11 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
+
+definePageMeta({
+  layout: false,
+});
+
 
 // Obtener el ID de la película desde los parámetros de la ruta
 const movieId = route.params.id
@@ -174,33 +173,39 @@ const comprarEntrada = (hora) => {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #e5e7eb;
+  background-color: #f8fafc; /* Fondo blanco-azul muy suave */
 }
 
 /* Navbar */
 .navbar {
-  background-color: gray;
+  background-color: #1e3a8a; /* Azul oscuro */
   padding: 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  color: black;
+  color: white;
 }
 
 .nav-button {
-  background-color: gainsboro;
+  background-color: #3b82f6; /* Azul claro */
   border: none;
   padding: 8px 12px;
   cursor: pointer;
+  color: white;
+  border-radius: 5px;
+}
+
+.nav-button:hover {
+  background-color: #2563eb; /* Azul más oscuro */
 }
 
 /* Estilos de los detalles de la película */
 .movie-details {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 20px;
-  max-width: 900px;
+  max-width: 1000px;
   margin: auto;
   background: white;
   border-radius: 10px;
@@ -208,8 +213,10 @@ const comprarEntrada = (hora) => {
 }
 
 .poster img {
-  width: 200px;
+  width: 250px;
+  height: 375px;
   border-radius: 8px;
+  object-fit: cover;
 }
 
 .info {
@@ -218,27 +225,26 @@ const comprarEntrada = (hora) => {
 }
 
 .info h2 {
-  font-size: 24px;
+  font-size: 26px;
   margin-bottom: 10px;
+  color: #1e3a8a; /* Azul oscuro */
 }
 
 .info p {
-  font-size: 16px;
+  font-size: 18px;
   color: #555;
 }
 
 .duration {
-  text-align: center;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
 }
 
-/* Contenedor de los horarios */
-.Horario-diponible {
+/* Contenedor de horarios */
+.Horario-diponible, .Horario-no-disponible {
   text-align: center;
   margin-top: 20px;
-}
-.Horario-no-disponible{
-  text-align: center;
 }
 
 .schedule-buttons {
@@ -249,7 +255,7 @@ const comprarEntrada = (hora) => {
 }
 
 .schedule-button {
-  background-color: red;
+  background-color: #1e3a8a; /* Azul oscuro */
   color: white;
   padding: 10px 20px;
   font-size: 18px;
@@ -260,16 +266,6 @@ const comprarEntrada = (hora) => {
 }
 
 .schedule-button:hover {
-  background-color: darkred;
-}
-
-/* Footer */
-.footer {
-  background-color: #a1a1a1;
-  padding: 15px;
-  text-align: center;
-  color: black;
-  font-weight: bold;
-  margin-top: 20px;
+  background-color: #2563eb; /* Azul más claro */
 }
 </style>
