@@ -34,6 +34,8 @@ class MovieController extends Controller
             'descripcion' => $movie->descripcion,
             'duracion' => $movie->duracion,
             'url_poster' => $movie->url_poster,
+            'trailer_url' => $movie->trailer_url,
+            'rating' => $movie->rating,
         ]);
     }
 }

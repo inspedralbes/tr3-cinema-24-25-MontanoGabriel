@@ -12,7 +12,10 @@ return new class extends Migration {
             $table->string('titulo');
             $table->text('descripcion')->nullable();
             $table->integer('duracion'); 
-            $table->string('url_poster')->nullable(); 
+            $table->string('url_poster')->nullable();
+            $table->string('trailer_url')->nullable(); // Para la URL del trailer
+            $table->float('rating')->nullable();      // Para la calificación (float puede ser adecuado)
+         
             $table->timestamps();
         });
     }

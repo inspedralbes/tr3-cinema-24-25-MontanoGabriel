@@ -16,19 +16,30 @@
       <!-- Descripción en el centro -->
       <div class="info">
         <h2>{{ movie.title }}</h2>
-        <p>{{ movie.description }}</p>
+        <p class="description">{{ movie.description }}</p>
+
+        <!-- Mostrar el tráiler solo si existe -->
+        <div v-if="movie.url_trailer" class="trailer">
+          <iframe 
+            :src="movie.url_trailer.replace('watch?v=', 'embed/')" 
+            allowfullscreen
+          ></iframe>
+        </div>
+        <p v-else class="no-trailer">🎬 Tráiler no disponible</p>
+
       </div>
 
       <!-- Duración a la derecha -->
       <div class="duration">
-        <h3>Duración:</h3>
+        <h3>⏳ Duración:</h3>
         <p>{{ movie.duration }} minutos</p>
+        <p class="rating">⭐ Valoración: {{ movie.valoration }}</p>
+
       </div>
     </div>
-
-    <!-- Horarios disponibles (Solo si la película es la película del día) -->
-    <div v-if="esPeliculaDelDia" class="Horario-diponible">
-      <h3>Horarios disponibles:</h3>
+    <!-- Horarios disponibles -->
+    <div v-if="esPeliculaDelDia" class="horarios">
+      <h3>🎟️ Horarios disponibles:</h3>
       <div class="schedule-buttons">
         <button 
           v-for="hora in horarios" 
@@ -40,8 +51,10 @@
         </button>
       </div>
     </div>
-    <div v-if="!esPeliculaDelDia" class="Horario-no-disponible">
-      <h3>No hay horarios disponibles para esta película hoy.</h3>
+
+    <!-- Mensaje si no hay horarios -->
+    <div v-if="!esPeliculaDelDia" class="horarios-no-disponibles">
+      <h3>📅 No hay horarios disponibles para esta película hoy.</h3>
     </div>
   </div>
 </template>
@@ -55,87 +68,47 @@ const router = useRouter()
 
 definePageMeta({
   layout: false,
-});
-
+})
 
 // Obtener el ID de la película desde los parámetros de la ruta
 const movieId = route.params.id
-const horarios = ref([]);
+const horarios = ref([])
 const movie = ref(null)
-const esPeliculaDelDia = ref(false);
+const esPeliculaDelDia = ref(false)
 
 const cargarHorarios = async () => {
   try {
-    // Hacemos la solicitud para obtener los horarios
-    const response = await fetch(`http://localhost:8000/api/session-movies`);
-    if (!response.ok) throw new Error('Error al obtener los horarios');
-    
-    // Convertimos la respuesta a JSON
-    const data = await response.json();
+    const response = await fetch(`http://localhost:8000/api/session-movies`)
+    if (!response.ok) throw new Error('Error al obtener los horarios')
 
-    // Inicializamos las variables para los horarios y la película seleccionada
-    const sesiones = [];
-// Reiniciar valores
-    horarios.value = [];
-    esPeliculaDelDia.value = false;
+    const data = await response.json()
+    horarios.value = []
+    esPeliculaDelDia.value = false
 
-    let peliculaSeleccionada = null;
+    const peliculaDelDia = data.movieOfTheDay
+    const peliculasSemanales = data.weeklyMovies
 
-    // Obtenemos la película del día y las películas semanales
-    const peliculaDelDia = data.movieOfTheDay;
-    const peliculasSemanales = data.weeklyMovies;
-
-     // Verificamos si hay una película del día y si coincide con el movieId
-     if (peliculaDelDia && peliculaDelDia.movie_id === parseInt(movieId)) {
-       esPeliculaDelDia.value = true; // Confirmamos que es la película del día
-     }
-
-    // Buscamos los horarios en las películas semanales
-    peliculasSemanales.forEach((peli) => {
-      if (peli.movie_id === parseInt(movieId)) {
-        sesiones.push(peli.time);  // Agregamos los horarios correspondientes
-        if (!peliculaSeleccionada) {
-          peliculaSeleccionada = peli;  // Asignamos los detalles de la película si no se ha asignado aún
-        }
-      }
-    });
-
-    // Asignamos los horarios a la variable reactiva
-    horarios.value = sesiones;
-
-    // Verificamos que se haya encontrado la película
-    if (peliculaSeleccionada) {
-      movie.value = {
-        title: peliculaSeleccionada.title || 'Título no disponible',
-        description: peliculaSeleccionada.description || 'Descripción no disponible',
-        duration: peliculaSeleccionada.duration || 'Duración no disponible',
-        poster_url: peliculaSeleccionada.poster_url || 'Poster de la pelicula no disponible',
-      };
-    } else {
-      console.warn('No se encontró la película con el ID especificado');
+    if (peliculaDelDia && peliculaDelDia.movie_id === parseInt(movieId)) {
+      esPeliculaDelDia.value = true
     }
 
+    peliculasSemanales.forEach((peli) => {
+      if (peli.movie_id === parseInt(movieId)) {
+        horarios.value.push(peli.time)
+      }
+    })
   } catch (error) {
-    console.error('Error al cargar los horarios y los detalles de la película:', error);
+    console.error('Error al cargar los horarios:', error)
   }
-};
+}
 
-
-
-
-// Llamamos a la función cuando el componente se monta
 onMounted(() => {
-  cargarHorarios();
-});
-
-
+  cargarHorarios()
+})
 
 onMounted(async () => {
   try {
-    // Construir la URL de la API para obtener los detalles de la película
     const apiUrl = `http://localhost:8000/api/movie/${movieId}`
-
-    // Usar fetch para hacer la petición
     const response = await fetch(apiUrl)
 
     if (!response.ok) {
@@ -149,74 +122,76 @@ onMounted(async () => {
       description: data.descripcion || 'Descripción no disponible',
       duration: data.duracion || 'Duración no disponible',
       poster_url: data.url_poster || 'https://via.placeholder.com/200x300?text=No+Image',
+      url_trailer: data.trailer_url || 'trailer no encontrado',
+      valoration: data.rating || 'Valoraciones no disponible',
     }
   } catch (error) {
     console.error('Error al cargar los detalles de la película:', error)
   }
 })
 
-
-// Función para regresar a la página anterior
 const goBack = () => {
-  router.go(-1) // Regresa a la página anterior
+  router.go(-1)
 }
 
-// Función para redirigir a la compra de entradas con el horario seleccionado
 const comprarEntrada = (hora) => {
   router.push(`/compra/${movieId}?hora=${hora}`)
 }
 </script>
 
 <style scoped>
-/* Estilos del contenedor principal */
+/* Estilos generales */
 .container {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #f8fafc; /* Fondo blanco-azul muy suave */
+  background-color: #f9fafb;
+  padding: 20px;
 }
 
 /* Navbar */
 .navbar {
-  background-color: #1e3a8a; /* Azul oscuro */
-  padding: 20px;
+  background-color: #0d47a1;
+  padding: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   color: white;
+  border-radius: 8px;
 }
 
 .nav-button {
-  background-color: #3b82f6; /* Azul claro */
+  background-color: #1976d2;
   border: none;
-  padding: 8px 12px;
+  padding: 10px 15px;
   cursor: pointer;
   color: white;
   border-radius: 5px;
+  transition: 0.3s;
 }
 
 .nav-button:hover {
-  background-color: #2563eb; /* Azul más oscuro */
+  background-color: #2563eb;
 }
 
-/* Estilos de los detalles de la película */
+/* Sección de detalles de la película */
 .movie-details {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 20px;
   max-width: 1000px;
-  margin: auto;
+  margin: 20px auto;
   background: white;
   border-radius: 10px;
-  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  padding: 20px;
 }
 
 .poster img {
   width: 250px;
-  height: 375px;
-  border-radius: 8px;
-  object-fit: cover;
+  height: auto;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .info {
@@ -225,24 +200,38 @@ const comprarEntrada = (hora) => {
 }
 
 .info h2 {
-  font-size: 26px;
+  font-size: 28px;
+  color: #1e3a8a;
   margin-bottom: 10px;
-  color: #1e3a8a; /* Azul oscuro */
 }
 
-.info p {
+.description {
   font-size: 18px;
-  color: #555;
+  color: #444;
+  margin-bottom: 15px;
 }
 
-.duration {
-  font-size: 18px;
-  font-weight: 500;
-  color: #333;
+.trailer iframe {
+  width: 100%;
+  max-width: 560px;
+  height: 300px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-/* Contenedor de horarios */
-.Horario-diponible, .Horario-no-disponible {
+.no-trailer {
+  font-size: 16px;
+  color: #777;
+}
+
+.rating {
+  font-size: 20px;
+  color: #f59e0b;
+  font-weight: bold;
+}
+
+/* Horarios */
+.horarios, .horarios-no-disponibles {
   text-align: center;
   margin-top: 20px;
 }
@@ -255,7 +244,7 @@ const comprarEntrada = (hora) => {
 }
 
 .schedule-button {
-  background-color: #1e3a8a; /* Azul oscuro */
+  background-color: #1e3a8a;
   color: white;
   padding: 10px 20px;
   font-size: 18px;
@@ -266,6 +255,18 @@ const comprarEntrada = (hora) => {
 }
 
 .schedule-button:hover {
-  background-color: #2563eb; /* Azul más claro */
+  background-color: #2563eb;
+}
+
+@media (max-width: 768px) {
+  .movie-details {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .info {
+    padding: 10px;
+  }
 }
 </style>

@@ -17,7 +17,7 @@
     </div>
 
     <!-- Selección de Horario -->
-    <p v-if="selectedHour">Horario seleccionado: {{ selectedHour }}</p>
+    <p v-if="selectedHour" class="selected-hour">Horario seleccionado: {{ selectedHour }}</p>
 
     <!-- Mapa de Butacas -->
     <div class="seat-selection">
@@ -29,44 +29,65 @@
           <div
             v-for="(seat, seatIndex) in row"
             :key="seatIndex"
-            :class="['seat', seat.status, seat.type, { 'occupied': seat.status === 'occupied' } ]" 
+            :class="['seat', seat.status, seat.type, { 'occupied': seat.status === 'occupied' } ]"
             @click="toggleSeat(rowIndex, seatIndex)">
-            {{ seatIndex + 1 }}
+            
+                                <!-- Asiento Ocupado (Rojo) -->
+            <div v-if="seat.status === 'occupied'">
+              <img src="/public/Silla-roja.svg" height="30px" width="30px" alt="Asiento Ocupado">
+            </div>
+
+
+                      <!-- Asiento Seleccionado -->
+            <div v-else-if="seat.status === 'selected'">
+              <img src="/public/Silla-verde.svg" height="30px" width="30px" alt="Asiento Seleccionado">
+            </div>
+
+            <!-- Asiento VIP (Dorado) -->
+            <div v-else-if="seat.type === 'vip'">
+              <img src="/public/VIP.png" height="30px" width="30px" alt="">
+            </div>
+
+            <!-- Asiento Normal (Gris) -->
+            <div v-else>
+              <img src="/public/Silla-normal.svg" height="30px" width="30px" alt="Asiento Normal">
+            </div>
+
+
+
           </div>
-        </div>
+         </div>
       </div>
-      <p v-if="selectedSeats.length">Asientos: {{ selectedSeats.join(', ') }}</p>
-      <p v-if="selectedSeats.length">Precio Total: {{ totalPrice.toFixed(2) }} €</p> <!-- Mostrar el precio total con 2 decimales -->
-    </div>
+        <p v-if="selectedSeats.length" class="summary">Asientos: {{ selectedSeats.join(', ') }}</p>
+         <p v-if="selectedSeats.length" class="summary">Precio Total: {{ totalPrice.toFixed(2) }} €</p>
+          </div>
 
-    
+                <!-- Opciones de compra -->
+                <div class="purchase-options">
+                  <button class="purchase-button" @click="isQuickPurchase = true">Comprar Rápido</button>
+                  <button class="purchase-button" @click="isQuickPurchase = false">Registrarse y Comprar</button>
+                </div>
 
-    <!-- Opciones de compra -->
-    <div>
-      <button @click="isQuickPurchase = true">Comprar Rápido</button>
-      <button @click="isQuickPurchase = false">Registrarse y Comprar</button>
-    </div>
+                <!-- Formulario de Compra Rápida -->
+                <div v-if="isQuickPurchase">
+                  <h3>Compra Rápida</h3>
+                  <input v-model="quickPurchaseData.name" placeholder="Nombre" />
+                  <input v-model="quickPurchaseData.surname" placeholder="Apellido" />
+                  <input v-model="quickPurchaseData.email" placeholder="Correo" />
+                  <button @click="finalizarCompraRapida">Comprar Ahora</button>
+                </div>
 
-    <!-- Formulario de Compra Rápida -->
-    <div v-if="isQuickPurchase">
-      <h3>Compra Rápida</h3>
-      <input v-model="quickPurchaseData.name" placeholder="Nombre" />
-      <input v-model="quickPurchaseData.surname" placeholder="Apellido" />
-      <input v-model="quickPurchaseData.email" placeholder="Correo" />
-      <button @click="finalizarCompraRapida">Comprar Ahora</button>
-    </div>
-
-    <!-- Formulario de Registro y Compra -->
-    <div v-else-if="!isRegistered">
-      <h3>Registrarse y Comprar</h3>
-      <input v-model="user.name" placeholder="Nombre" />
-      <input v-model="user.surname" placeholder="Apellido" />
-      <input v-model="user.email" placeholder="Correo" />
-      <button @click="registrarUsuario">Registrarse y Comprar</button>
-    </div>
-
-   </div>
+                <!-- Formulario de Registro y Compra -->
+                <div v-else-if="!isRegistered">
+                  <h3>Registrarse y Comprar</h3>
+                  <input v-model="user.name" placeholder="Nombre" />
+                  <input v-model="user.surname" placeholder="Apellido" />
+                  <input v-model="user.email" placeholder="Correo" />
+                  <button @click="registrarUsuario">Registrarse y Comprar</button>
+                </div>
+              </div>
 </template>
+
 
 <script setup>
   import { ref, onMounted, computed, watch } from 'vue'
@@ -91,6 +112,10 @@
   // Datos de la película
   const movie = ref(null)
   const selectedHour = ref(route.query.hora || '')
+  // estado de los asientos seleccionados
+  const selectedSeats = ref([])
+  // nomero de asientos permitidos para seleccionar
+  const maxSeats = 10
 
   // Configuración del mapa de butacas
   const rowLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L']
@@ -103,8 +128,7 @@
       }))
     )
   )
-  const selectedSeats = ref([])
-  const maxSeats = 10
+  
 
   // Calcular el precio total
   const totalPrice = computed(() => {
@@ -115,6 +139,7 @@
       return sum + price
     }, 0)
   })
+
 
   // Función para cargar la película
   onMounted(async () => {
@@ -136,20 +161,36 @@
   // Función para regresar
   const goBack = () => router.go(-1)
 
+
   // Alternar selección de asientos
-  const toggleSeat = (rowIndex, seatIndex) => {
-    const seat = seats.value[rowIndex][seatIndex]
-    const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
-    // No permite seleccionar asientos ocupados 
-    if (seat.status === 'occupied') return
-    if (seat.status === 'selected') {
-      seat.status = 'available'
-      selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
-    } else if (selectedSeats.value.length < maxSeats) {
-      seat.status = 'selected'
-      selectedSeats.value.push(seatLabel)
-    }
+const toggleSeat = (rowIndex, seatIndex) => {
+  const seat = seats.value[rowIndex][seatIndex]
+  const seatLabel = `${rowLabels[rowIndex]}${seatIndex + 1}`
+
+  // Validar si el asiento realmente existe
+  if (!seats.value[rowIndex] || !seats.value[rowIndex][seatIndex]) {
+    console.error(`⚠️ Error: Asiento en fila ${rowIndex}, columna ${seatIndex} no existe.`)
+    return
   }
+  // No permite seleccionar asientos ocupados
+  if (seat.status === 'occupied') return
+  
+  // Alternar entre 'selected' y 'available'
+  if (seat.status === 'selected') {
+    seat.status = 'available'
+    selectedSeats.value = selectedSeats.value.filter(s => s !== seatLabel)
+  } else if (selectedSeats.value.length < maxSeats) {
+    seat.status = 'selected'
+    selectedSeats.value.push(seatLabel)
+  }
+
+  // 🔥 Forzar la reactividad en Vue 🔥
+  seats.value = [...seats.value]
+}
+
+
+
+
 
   // Guardar asientos seleccionados en localStorage (opcional)
   watch(selectedSeats, newSeats => {
@@ -305,199 +346,146 @@
     console.error(error)
   }
 })
-
 </script>
 
   
-  <style scoped>
-  /* Contenedor principal */
-  .container {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    background-color: #e5e7eb;
-    text-align: center;
-    padding: 20px;
-  }
-  
-  /* Navbar */
-  .navbar {
-    background-color: gray;
-    padding: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: black;
-  }
-  
-  .nav-button {
-    background-color: gainsboro;
-    border: none;
-    padding: 8px 12px;
-    cursor: pointer;
-  }
-  
-  /* Detalles de la película */
-  .movie-details {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    max-width: 900px;
-    margin: auto;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 20px;
-  }
-  
-  .poster img {
-    width: 200px;
-    border-radius: 8px;
-  }
-  
-  .info {
-    flex: 1;
-    padding: 0 20px;
-    text-align: left;
-  }
-  
-  .info h2 {
-    font-size: 24px;
-    margin-bottom: 10px;
-  }
-  
-  .info p {
-    font-size: 16px;
-    color: #555;
-  }
-  
-  .duration {
-    text-align: center;
-    font-weight: bold;
-  }
-  
-  /* Horario */
-  .schedule-container {
-    text-align: center;
-    margin-bottom: 20px;
-  }
-  .seat.vip {
-  background-color: yellow !important;
+<style scoped>
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  text-align: center;
+  padding: 20px;
 }
-.seat.vip.occupied {
-  background-color: red !important;
+
+.navbar {
+  background-color: #0d47a1;
+  padding: 15px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: white;
+}
+
+.nav-button {
+  background-color: #1976d2;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+.movie-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  max-width: 900px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.poster {
+  width: 200px;
+  border-radius: 8px;
+}
+
+.info {
+  flex: 1;
+  padding: 0 20px;
+  text-align: left;
+}
+
+.screen {
+  background-color: #374151;
+  color: white;
+  padding: 8px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+  font-weight: bold;
+}
+
+.seating-chart {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: center;
+}
+
+.seat-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.row-label {
+  font-weight: bold;
+  width: 20px;
+  text-align: center;
+}
+
+.seat {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; /* Hace que los asientos sean circulares */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.seat.available {
+}
+
+.seat.occupied {
   cursor: not-allowed;
 }
 
+.seat.vip {
+}
 
-  
-  /* Mapa de butacas */
-  .seat-selection {
-    margin: 20px 0;
-  }
-  
-  .screen {
-    background-color: #444;
-    color: #fff;
-    padding: 8px;
-    border-radius: 5px;
-    margin-bottom: 10px;
-    font-weight: bold;
-  }
-  
-  .seating-chart {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    align-items: center;
-  }
-  
-  .seat-row {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-  }
-  
-  .row-label {
-    font-weight: bold;
-    width: 20px;
-    text-align: center;
-  }
-  
-  .seat {
-    width: 35px;
-    height: 35px;
-    border-radius: 5px;
-    text-align: center;
-    line-height: 35px;
-    font-size: 14px;
-    cursor: pointer;
-    transition: transform 0.2s;
-  }
-  
-  .seat.available {
-    background-color: lightgray;
-  }
-  
-  .seat.occupied {
-    background-color: red;
-    cursor: not-allowed;
-  }
-  /* Estilo para asientos VIP ocupados */
-  
-  
-  .seat.selected {
-    background-color: green;
-    color: white;
-    transform: scale(1.1);
-  }
-  
-  /* Formulario de datos */
-  .form-container {
-    margin: 20px 0;
-  }
-  
-  .form-container input {
-    margin: 5px;
-    padding: 8px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-  }
-  
-  /* Botón de compra */
-  .buy-button-container {
-    margin: 20px 0;
-  }
-  
-  .buy-button {
-    background-color: red;
-    color: white;
-    padding: 10px 20px;
-    font-size: 18px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-  }
-  
-  .buy-button:hover {
-    background-color: darkred;
-  }
-  
-  .buy-button:disabled {
-    background-color: gray;
-    cursor: not-allowed;
-  }
-  
-  /* Mensaje */
-  .message {
-    color: green;
-    font-weight: bold;
-    margin-top: 10px;
-  }
-  
-  
-  </style>
-  
+.seat.vip.occupied {
+}
+
+.seat.selected {
+  transform: scale(1.1);  
+  color: white;           
+}
+
+
+
+.summary {
+  font-size: 18px;
+  font-weight: bold;
+  color: #374151;
+}
+
+.purchase-options {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.purchase-button {
+  background-color: #2563eb;
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.purchase-button:hover {
+  background-color: #1e40af;
+}
+</style>
