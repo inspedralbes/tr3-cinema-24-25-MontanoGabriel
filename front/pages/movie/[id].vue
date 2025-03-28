@@ -19,15 +19,15 @@
         <p class="description">{{ movie.description }}</p>
 
         <!-- Mostrar el tráiler solo si existe -->
-        <div v-if="movie.url_trailer" class="trailer">
+        <div v-if="isValidYouTubeUrl(movie.url_trailer)" class="trailer">
           <iframe 
             :src="movie.url_trailer.replace('watch?v=', 'embed/')" 
             allowfullscreen
           ></iframe>
         </div>
         <p v-else class="no-trailer">🎬 Tráiler no disponible</p>
-
       </div>
+      
 
       <!-- Duración a la derecha -->
       <div class="duration">
@@ -35,8 +35,8 @@
         <p>{{ movie.duration }} minutos</p>
         <p class="rating">⭐ Valoración: {{ movie.valoration }}</p>
 
+        </div>
       </div>
-    </div>
     <!-- Horarios disponibles -->
     <div v-if="esPeliculaDelDia" class="horarios">
       <h3>🎟️ Horarios disponibles:</h3>
@@ -62,7 +62,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-
+  
 const route = useRoute()
 const router = useRouter()
 
@@ -75,6 +75,11 @@ const movieId = route.params.id
 const horarios = ref([])
 const movie = ref(null)
 const esPeliculaDelDia = ref(false)
+
+
+const isValidYouTubeUrl = (url) => {
+  return url && url.includes('youtube.com/watch?v=');
+};
 
 const cargarHorarios = async () => {
   try {
@@ -220,8 +225,12 @@ const comprarEntrada = (hora) => {
 }
 
 .no-trailer {
-  font-size: 16px;
-  color: #777;
+  text-align: center;
+  font-weight: bold;
+  color: #ff6347;
+  padding: 10px;
+  background: #f7f7f7;
+  border-radius: 5px;
 }
 
 .rating {

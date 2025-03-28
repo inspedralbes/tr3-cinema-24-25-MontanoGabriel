@@ -8,39 +8,78 @@ use App\Models\TicketType;
 use App\Models\SpecialPrice;
 use App\Models\SessionMovie;
 use Illuminate\Support\Facades\DB;
+use App\Mail\CompraConfirmacion;
+use Illuminate\Support\Facades\Mail;
 
 class CompraController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'session_movie_id' => 'required|exists:session_movies,id',
-            'seats' => 'required|array|min:1',
-            'seats.*.row' => 'required|string',
-            'seats.*.seat' => 'required|integer',
-            'total_price' => 'required|numeric',
-            'name' => 'required|string',
-            'surname' => 'required|string',
-            'email' => 'required|email',
-        ]);
+
+            
+            $request->validate([
+                'session_movie_id' => 'required|exists:session_movies,id',
+                'seats' => 'required|array|min:1',
+                'seats.*.row' => 'required|string',
+                'seats.*.seat' => 'required|integer',
+                'total_price' => 'required|numeric',
+                'name' => 'required|string',
+                'surname' => 'required|string',
+                'email' => 'required|email',
+            ]);
+        
+            // Si el usuario está autenticado, puedes obtenerlo de auth(), de lo contrario, usa los datos enviados
+            $user = auth()->user();
+            $ticketData = [
+                'user_id' => $user ? $user->id : null,
+                'name' => $user ? null : $request->name,
+                'surname' => $user ? null : $request->surname,
+                'email' => $user ? null : $request->email,
+                'session_movie_id' => $request->session_movie_id,
+                'seats' => json_encode($request->seats),
+                'total_price' => $request->total_price,
+            ];
+        
+            $ticket = Ticket::create($ticketData);
+
+                     // Suponiendo que $request->session_movie_id contiene el ID de la película y sesión seleccionada.
+            $sessionMovie = \App\Models\SessionMovie::with('movie') // Relaciona la sesión con la película
+            ->where('id', $request->session_movie_id)
+            ->first();
+
+            // Verifica si la sesión de la película fue encontrada
+            if ($sessionMovie) {
+            $datosCompra = [
+                'nombre'      => $user ? $user->name : $request->name,
+                'apellido'    => $user ? $user->surname : $request->surname,
+                'email'       => $user ? $user->email : $request->email,
+                'pelicula'    => $sessionMovie->movie->titulo, // Obtener el nombre de la película
+                'horario'     => $sessionMovie->time, // Obtener la hora de la sesión
+                'asientos'    => implode(', ', array_map(function ($seat) {
+                    return $seat['row'] . $seat['seat'];
+                }, $request->seats)),
+                'total_price' => $request->total_price,
+                'url_poster'  => $sessionMovie->movie->url_poster ?? '#', // Asumiendo que el campo es 'poster_url'
+
+            ];
+            } else {
+            // Si no se encuentra la sesión, puedes manejar el error
+            return response()->json(['error' => 'Sesión de película no encontrada'], 404);
+            }
+
+        
+                  
     
-        // Si el usuario está autenticado, puedes obtenerlo de auth(), de lo contrario, usa los datos enviados
-        $user = auth()->user();
-        $ticketData = [
-            'user_id' => $user ? $user->id : null,
-            'name' => $user ? null : $request->name,
-            'surname' => $user ? null : $request->surname,
-            'email' => $user ? null : $request->email,
-            'session_movie_id' => $request->session_movie_id,
-            'seats' => json_encode($request->seats),
-            'total_price' => $request->total_price,
-        ];
+                // Enviar el correo de confirmación al email proporcionado
+                Mail::to($datosCompra['email'])->send(new CompraConfirmacion($datosCompra));
     
-        $ticket = Ticket::create($ticketData);
     
-        // Aquí podrías guardar la información de los asientos seleccionados en otra tabla si lo deseas
-    
-        return response()->json(['message' => 'Compra realizada con éxito', 'ticket' => $ticket], 201);
+            // Aquí podrías guardar la información de los asientos seleccionados en otra tabla si lo deseas
+            return response()->json(['message' => 'Compra realizada con éxito', 'ticket' => $ticket], 201);
+
+        
+        
+        
     }
 
     // En el controlador `CompraController.php` o `TicketController.php`
