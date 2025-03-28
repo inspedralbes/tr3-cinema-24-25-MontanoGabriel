@@ -68,7 +68,7 @@ const logout = async () => {
 
     // Elimina el token y redirige al login
     localStorage.removeItem('auth_token')
-    router.push('/login')
+    router.push('/')
   } catch (error) {
     console.error('Error al cerrar sesión:', error)
   }
