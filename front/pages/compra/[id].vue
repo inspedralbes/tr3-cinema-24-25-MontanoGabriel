@@ -39,7 +39,6 @@
             ]"
             @click="toggleSeat(rowIndex, seatIndex)"
           >
-            <!-- Asiento Ocupado (Rojo) -->
             <div v-if="seat.status === 'occupied'">
               <img
                 src="/public/Silla-roja.svg"
@@ -49,7 +48,6 @@
               />
             </div>
 
-            <!-- Asiento Seleccionado -->
             <div v-else-if="seat.status === 'selected'">
               <img
                 src="/public/Silla-verde.svg"
@@ -59,12 +57,10 @@
               />
             </div>
 
-            <!-- Asiento VIP (Dorado) -->
             <div v-else-if="seat.type === 'vip'">
               <img src="/public/VIP.png" height="30px" width="30px" alt="" />
             </div>
 
-            <!-- Asiento Normal (Gris) -->
             <div v-else>
               <img
                 src="/public/Silla-normal.svg"
@@ -89,9 +85,6 @@
       <button class="purchase-button" @click="isQuickPurchase = true">
         Comprar Rápido
       </button>
-      <button class="purchase-button" @click="isQuickPurchase = false">
-        Registrarse y Comprar
-      </button>
     </div>
 
     <!-- Formulario de Compra Rápida -->
@@ -101,15 +94,6 @@
       <input v-model="quickPurchaseData.surname" placeholder="Apellido" />
       <input v-model="quickPurchaseData.email" placeholder="Correo" />
       <button @click="finalizarCompraRapida">Comprar Ahora</button>
-    </div>
-
-    <!-- Formulario de Registro y Compra -->
-    <div v-else-if="!isRegistered">
-      <h3>Registrarse y Comprar</h3>
-      <input v-model="user.name" placeholder="Nombre" />
-      <input v-model="user.surname" placeholder="Apellido" />
-      <input v-model="user.email" placeholder="Correo" />
-      <button @click="registrarUsuario">Registrarse y Comprar</button>
     </div>
   </div>
 </template>
@@ -248,7 +232,6 @@ const finalizarCompra = async (datosUsuario) => {
   const requestBody = {
     session_movie_id: route.params.id,
     seats: selectedSeatsFormatted,
-    user_id: datosUsuario.id, // Para compra normal el usuario ya estará autenticado
     name: quickPurchaseData.value.name,
     surname: quickPurchaseData.value.surname,
     email: quickPurchaseData.value.email,

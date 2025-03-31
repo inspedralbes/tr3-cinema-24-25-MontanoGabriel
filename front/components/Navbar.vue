@@ -10,10 +10,6 @@
         class="search-bar"
       />
       <button class="nav-calendar" @click="irCalendario">Sesión semanal</button>
-      <button class="nav-button" @click="irPeliculas">
-        Todas las peliculas
-      </button>
-      <button class="nav-button">🛒</button>
       <!-- Botón de perfil o ícono de login según si está logueado -->
       <div v-if="isLogged" class="profile-photo" @click="irPerfil">
         <img class="loginIcon" :src="profilePhoto" alt="Foto de perfil" />
@@ -123,8 +119,8 @@ const irLogin = () => {
   color: #000000;
 }
 .loginIcon {
-  width: 40px;
-  height: 40px;
+  width: 55px;
+  height: 50px;
   border-radius: 50%;
   cursor: pointer;
 }
