@@ -150,7 +150,7 @@ const totalPrice = computed(() => {
 onMounted(async () => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/movie/${route.params.id}`
+      `http://cinemix.daw.inspedralbes.cat/laravel/public/api/movie/${route.params.id}`
     );
     if (!response.ok) throw new Error("Error al obtener la película");
     const data = await response.json();
@@ -241,7 +241,7 @@ const finalizarCompra = async (datosUsuario) => {
   console.log("Enviando datos:", requestBody);
 
   try {
-    const response = await fetch("http://localhost:8000/api/compra", {
+    const response = await fetch("http://cinemix.daw.inspedralbes.cat/laravel/public/api/compra", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -281,7 +281,7 @@ const finalizarCompraRapida = async () => {
   console.log("Enviando datos (compra rápida):", requestBody);
 
   try {
-    const response = await fetch("http://localhost:8000/api/compra", {
+    const response = await fetch("http://cinemix.daw.inspedralbes.cat/laravel/public/api/compra", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody),
@@ -305,7 +305,7 @@ const finalizarCompraRapida = async () => {
 const registrarUsuario = async () => {
   if (!validarCompra(user.value)) return;
   try {
-    const response = await fetch("http://localhost:8000/api/registro", {
+    const response = await fetch("http://cinemix.daw.inspedralbes.cat/laravel/public/api/registro", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(user.value),
@@ -332,7 +332,7 @@ const message = ref("");
 onMounted(async () => {
   try {
     const response = await fetch(
-      `http://localhost:8000/api/asientos-ocupados/${route.params.id}`
+      `http://cinemix.daw.inspedralbes.cat/laravel/public/api/asientos-ocupados/${route.params.id}`
     );
     if (!response.ok) throw new Error("Error al obtener los asientos ocupados");
     const data = await response.json();

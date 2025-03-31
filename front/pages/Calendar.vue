@@ -36,7 +36,7 @@ const goToSessions = (movieId) => {
 // Función para obtener los detalles completos de una película
 const obtenerDetallesPelicula = async (movieId) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/movie/${movieId}`);
+    const response = await fetch(`http://cinemix.daw.inspedralbes.cat/laravel/public/api/movie/${movieId}`);
     if (!response.ok) {
       throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
     }
@@ -56,7 +56,7 @@ const obtenerDetallesPelicula = async (movieId) => {
 // Función para obtener las películas semanales y sus detalles
 const obtenerPeliculasSemanales = async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/session-movies');
+    const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/session-movies');
     if (!response.ok) {
       throw new Error(`Error al obtener las películas semanales: ${response.status}`);
     }

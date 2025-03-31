@@ -26,7 +26,7 @@ const fetchUser = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/user', {
+    const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/user', {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -54,7 +54,7 @@ const logout = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/logout', {
+    const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/logout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

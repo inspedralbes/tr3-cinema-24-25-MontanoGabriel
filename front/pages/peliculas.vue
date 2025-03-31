@@ -67,7 +67,7 @@
   
   onMounted(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/movies')
+      const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/movies')
       if (!response.ok) {
         throw new Error(`Error HTTP: ${response.status}`)
       }

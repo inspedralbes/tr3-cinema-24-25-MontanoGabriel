@@ -67,7 +67,7 @@ const verDetalles = (movieId) => {
 //  Funcion para obtener la informacion de las peliculas
 const obtenerDetallesPelicula = async (movieId) => {
   try {
-    const response = await fetch(`http://localhost:8000/api/movie/${movieId}`);
+    const response = await fetch(`http://cinemix.daw.inspedralbes.cat/laravel/public/api/movie/${movieId}`);
     if (!response.ok) {
       throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
     }
@@ -94,7 +94,7 @@ onMounted(() => {
 // Al montar el componente, realizamos la petición al endpoint de películas
 onMounted(async () => {
   try {
-    const response = await fetch('http://localhost:8000/api/session-movies');
+    const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/session-movies');
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -103,7 +103,7 @@ onMounted(async () => {
     // Al recibir la película del día, utilizar `movie_id` como identificador
 if (data.movieOfTheDay && data.movieOfTheDay.movie_id) {
   const movieId = data.movieOfTheDay.movie_id;
-  const movieResponse = await fetch(`http://localhost:8000/api/movie/${movieId}`);
+  const movieResponse = await fetch(`http://cinemix.daw.inspedralbes.cat/laravel/public/api/movie/${movieId}`);
   if (!movieResponse.ok) {
     throw new Error(`Error al obtener los detalles de la película con ID: ${movieId}`);
   }

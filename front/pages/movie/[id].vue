@@ -83,7 +83,7 @@ const isValidYouTubeUrl = (url) => {
 
 const cargarHorarios = async () => {
   try {
-    const response = await fetch(`http://localhost:8000/api/session-movies`)
+    const response = await fetch(`http://cinemix.daw.inspedralbes.cat/laravel/public/api/session-movies`)
     if (!response.ok) throw new Error('Error al obtener los horarios')
 
     const data = await response.json()
@@ -113,7 +113,7 @@ onMounted(() => {
 
 onMounted(async () => {
   try {
-    const apiUrl = `http://localhost:8000/api/movie/${movieId}`
+    const apiUrl = `http://cinemix.daw.inspedralbes.cat/laravel/public/api/movie/${movieId}`
     const response = await fetch(apiUrl)
 
     if (!response.ok) {

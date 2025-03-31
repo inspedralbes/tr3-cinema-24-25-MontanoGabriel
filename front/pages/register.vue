@@ -51,7 +51,7 @@ const register = async () => {
   }
 
   try {
-    const response = await fetch('http://localhost:8000/api/register', {
+    const response = await fetch('http://cinemix.daw.inspedralbes.cat/laravel/public/api/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
